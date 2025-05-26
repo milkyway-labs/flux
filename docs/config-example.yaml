@@ -1,0 +1,73 @@
+# Logging config
+logging:
+  # The logger level
+  level: "debug"
+  # The logger format, can be text or json
+  mode: "text"
+
+# Databases that can be used by the indexer
+databases:
+  # An example of postgres database
+  test:
+    type: "postgres"
+    url: "postgres://milkyway:password@localhost:6432/milkyway?sslmode=disable&search_path=public"
+
+# Nodes that can be used by an indexer to obtains the blocks from which we 
+# extract the data.
+nodes:
+  # An example of cosmos rpc node
+  osmosis-mainnet:
+    type: "cosmos-rpc"
+    url: "https://rpc.osmosis.zone"
+  celestia-mainnet:
+    type: "cosmos-rpc"
+    url: "https://celestia-rpc.publicnode.com"
+
+# Map that contains the modules configurations
+modules:
+  # Config for the example module
+  example:
+    config1: "default"
+
+# List of indexers that will be created
+indexers:
+  # An example of indexer that fetches the data from the `osmosis-mainnet` node
+  # and store the indexed data inside the `test` database
+  - name: "osmosis-indexer"
+    node_id: "osmosis-mainnet"
+    database_id: "test"
+    # Number of workers that will be used to process the blocks.
+    workers: 1 
+    # Size of the queue used to signal the block to fetch
+    height_queue_size: 100
+    # Interval with which we query the node for newly produced blocks.
+    node_polling_interval: "1s"
+    # List of modules used by this indexer
+    modules: 
+      - "example"
+    # Number of time that we retry to parse a block
+    max_attempts: 2
+    # Time that will waited before re-enqueing a failed block
+    time_before_retry: "5s"
+
+  # An example of indexer that fetches the data from the `osmosis-mainnet` node
+  # and store the indexed data inside the `test` database
+  - name: "celestia-indexer"
+    node_id: "celestia-mainnet"
+    database_id: "test"
+    # Number of workers that will be used to process the blocks.
+    workers: 1 
+    # Size of the queue used to signal the block to fetch
+    height_queue_size: 100
+    # Interval with which we query the node for newly produced blocks.
+    node_polling_interval: "1s"
+    override_module_config: 
+      example:
+        config1: "celestia"
+    # List of modules used by this indexer
+    modules: 
+      - "example"
+    # Number of time that we retry to parse a block
+    max_attempts: 2
+    # Time that will waited before re-enqueing a failed block
+    time_before_retry: "5s"
