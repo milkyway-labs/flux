@@ -1,0 +1,81 @@
+@startuml
+' External types
+class time.Time
+class context.Context
+class sync.WaitGroup
+
+' Height type alias
+class Height << (T,#FFAAAA) type >>
+
+' Queue generic class (simplified)
+class Queue<T>
+
+class indexHeight << (T,#FFAAAA) type >>
+
+' Block interface
+interface Block {
+    + GetChainID(): string
+    + GetHeight(): Height
+    + GetTimeStamp(): time.Time
+    + GetTxs(): []Tx
+}
+
+' Tx interface
+interface Tx {
+    + GetHash(): string
+    + IsSuccessful(): bool
+}
+
+' Database interface
+interface Database {
+    + GetLowestBlock(chainID: string): *Height, error
+    + GetMissingBlocks(chainID: string, from: Height, to: Height): []Height, error
+    + SaveIndexedBlock(chainID: string, height: Height, timestamp: time.Time): error
+}
+
+' Node interface
+interface Node {
+    + GetChainID(): string
+    + GetBlock(ctx: context.Context, height: Height): Block, error
+    + GetLowestHeight(ctx: context.Context): Height, error
+    + GetCurrentHeight(ctx: context.Context): Height, error
+}
+
+' Module interfaces
+interface Module {
+    + GetName(): string
+}
+
+interface BlockHandleModule {
+    + HandleBlock(ctx: context.Context, block: Block): error
+}
+
+interface TxHandleModule {
+    + HandleTx(ctx: context.Context, block: Block, tx: Tx): error
+}
+
+' Indexer struct
+class Indexer {
+    - db: Database
+    - node: Node
+    - HeightsQueue: Queue<indexHeight>
+    - modules: []Module
+    + GetName(): string
+    + Start(ctx: context.Context, wg: *sync.WaitGroup): error
+    + FetchAndProcessBlock(ctx: context.Context, height: Height): error
+}
+
+' Inheritance / Realization
+BlockHandleModule --|> Module
+TxHandleModule --|> Module
+
+' Indexer composition/association
+Indexer --> Database : uses
+Indexer --> Node : uses
+Indexer --> Queue : uses
+Indexer "1" --> "*" Module : contains
+
+' Block and Tx relationships
+Block "1" o-- "*" Tx : contains
+
+@enduml
