@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	log "github.com/rs/zerolog"
 
@@ -263,6 +262,6 @@ func (i *Indexer) reEnqueueBlock(ctx context.Context, indexHeight indexHeight) {
 		}
 
 		i.log.Info().Uint64("height", uint64(indexHeight.Height)).Msg("re-enqueue block")
-		i.HeightsQueue.DelayedEnqueue(ctx, time.Duration(i.cfg.TimeBeforeRetry), indexHeight)
+		i.HeightsQueue.DelayedEnqueue(ctx, i.cfg.TimeBeforeRetry, indexHeight)
 	}
 }
