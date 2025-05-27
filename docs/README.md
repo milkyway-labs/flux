@@ -16,12 +16,13 @@ Architecture-related documentation:
 
 Instructions for adding support for a new blockchain:
 
-* [Support new chains guide](./support_new_chains.md) 
+* [Support new chains guide](./support_new_chains.md)
 
 ## Support New Databases
 
 Instructions for adding support for a new `Database` backend:
 
+* [Support new database backend](./support_new_chains.md)
 
 ## Develop Custom Indexing Modules
 
