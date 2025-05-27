@@ -8,14 +8,15 @@ how to extend it to support new chains, and how to develop custom indexers to ex
 
 Architecture-related documentation:
 
-* [indexing](./indexing_architecture.md): Overview of the indexing architecture
-* [configurations](./config_structure.md): Overview of the configuration file
+* [Indexing](./indexing_architecture.md): Overview of the indexing architecture
+* [Configurations](./config_structure.md): Overview of the configuration file
 
 
 ## Support New Chains
 
 Instructions for adding support for a new blockchain:
 
+* [Support new chains guide](./support_new_chains.md) 
 
 ## Support New Databases
 
