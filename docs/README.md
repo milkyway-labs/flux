@@ -28,3 +28,5 @@ Instructions for adding support for a new `Database` backend:
 
 Guidelines for developing a custom `Module` to index a blockchain:
 
+* [Create block handle module](./create_block_handle_module.md)
+
