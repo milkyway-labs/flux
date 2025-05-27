@@ -30,7 +30,7 @@ func (mm *DatabasesManager) RegisterDatabase(nodeType string, builder Builder) *
 func (mm *DatabasesManager) GetDatabase(
 	ctx context.Context,
 	dbType string,
-	nodeID string,
+	databaseID string,
 	cfg []byte,
 ) (database.Database, error) {
 	// Get the database builder
@@ -39,5 +39,5 @@ func (mm *DatabasesManager) GetDatabase(
 		return nil, fmt.Errorf("can't find builder for db `%s`", dbType)
 	}
 
-	return builder(ctx, nodeID, cfg)
+	return builder(ctx, databaseID, cfg)
 }
