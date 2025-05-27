@@ -11,13 +11,13 @@ A complete configuration example can be found [here](./config-example.yaml).
 
 The configuration file includes the following sections:
 
-* `logging`: Defines the log format and verbosity level.
-* `databases`: Contains configurations for databases that can be used by an `Indexer`.
-* `nodes`: Contains configurations for the nodes that can be used by an `Indexer`.
-* `modules`: Contains module-specific configurations.
-* `indexers`: Defines the configuration used to create `Indexer` instances.
+* [logging](#logging): Defines the log format and verbosity level.
+* [databases](#databases): Contains configurations for databases that can be used by an `Indexer`.
+* [nodes](#nodes): Contains configurations for the nodes that can be used by an `Indexer`.
+* [modules](#modules): Contains module-specific configurations.
+* [indexers](#indexers): Defines the configuration used to create `Indexer` instances.
 
-### Logging Configuration
+### Logging 
 
 Below is an example of a valid `logging` configuration:
 
@@ -110,4 +110,51 @@ During initialization, the module will receive the following YAML content:
 value1: "a generic value"
 value2: 42
 ```
+
+### Indexers
+
+Indexers are defined as a list, where each element represents the configuration for an `Indexer` instance. 
+Since this is a component for which we know all possible configuration fields, we enforce the following structure:
+
+```yaml
+indexers:
+  - name: "test-indexer"
+    node_id: "cosmos-node"
+    database_id: "my-db"
+    # List of modules used by this indexer
+    modules: 
+      - "example"
+    # Number of workers used to process blocks
+    workers: 1 
+    # Size of the queue used to track blocks to fetch
+    height_queue_size: 100
+    # Interval for polling the node for newly produced blocks
+    node_polling_interval: "1s"
+    # Number of attempts to retry parsing a block
+    max_attempts: 2
+    # Delay before re-enqueuing a failed block
+    time_before_retry: "5s"
+    # Indexer-specific module configurations
+    override_module_config:
+      example:
+        value1: "custom"
+        value2: 43
+```
+
+The following fields are **required**, while the rest are **optional** and will fall back to default values if not specified:
+
+* `name`: The name of the indexer.
+* `node_id`: The ID of the node used to fetch blocks.
+* `database_id`: The ID of the database where indexed data will be stored.
+* `modules`: A list of modules that will be used by the indexer.
+
+**Optional fields:**
+
+* `workers`: Number of workers used to process blocks. Defaults to `1`.
+* `height_queue_size`: Maximum number of blocks that can be queued for fetching. Defaults to `100`.
+* `node_polling_interval`: How often to poll the node for new blocks. Defaults to `"1s"`.
+* `max_attempts`: Number of retries for parsing a failed block. Defaults to `5`
+* `time_before_retry`: Delay before re-enqueuing a failed block for parsing. Defaults to `"10s"`
+* `override_module_config`: A map containing module configurations specific to this indexer. 
+This can be used to override the default configurations defined in the `modules` section.
 
