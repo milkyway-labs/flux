@@ -5,14 +5,13 @@ import (
 	"fmt"
 
 	"github.com/milkyway-labs/chain-indexer/database"
-	"github.com/milkyway-labs/chain-indexer/database/manager"
 	"github.com/milkyway-labs/chain-indexer/types"
 	"gopkg.in/yaml.v3"
 )
 
-const PostgresDatabaseType = "postgres"
+const DatabaseType = "postgres"
 
-func PostgresDatabaseBuilder(
+func DatabaseBuilder(
 	ctx context.Context,
 	id string,
 	rawConfig []byte,
@@ -31,8 +30,4 @@ func PostgresDatabaseBuilder(
 	indexerCtx := types.GetIndexerContext(ctx)
 
 	return NewDatabase(indexerCtx.Logger, &config)
-}
-
-func AddPostgressDatabaseSupport(manager *manager.DatabasesManager) *manager.DatabasesManager {
-	return manager.RegisterDatabase(PostgresDatabaseType, PostgresDatabaseBuilder)
 }

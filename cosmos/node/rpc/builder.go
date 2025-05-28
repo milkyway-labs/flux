@@ -5,12 +5,11 @@ import (
 	"fmt"
 
 	"github.com/milkyway-labs/chain-indexer/node"
-	"github.com/milkyway-labs/chain-indexer/node/manager"
 	"github.com/milkyway-labs/chain-indexer/types"
 	"gopkg.in/yaml.v3"
 )
 
-const CosmosRPCNodeType = "cosmos-rpc"
+const NodeType = "cosmos-rpc"
 
 func NodeBuilder(
 	ctx context.Context,
@@ -32,8 +31,4 @@ func NodeBuilder(
 
 	indexerCtx := types.GetIndexerContext(ctx)
 	return NewNode(ctx, indexerCtx.Logger, config)
-}
-
-func AddCosmosRPCNodeSupport(manager *manager.NodesManager) *manager.NodesManager {
-	return manager.RegisterNode(CosmosRPCNodeType, NodeBuilder)
 }

@@ -10,8 +10,13 @@ import (
 
 func main() {
 	ctx := types.NewCliContext("example")
-	postgresql.AddPostgressDatabaseSupport(ctx.DatabasesManager)
-	rpc.AddCosmosRPCNodeSupport(ctx.NodesManager)
+	// Database types
+	ctx.DatabasesManager.RegisterDatabase(postgresql.DatabaseType, postgresql.DatabaseBuilder)
+
+	// Nodes types
+	ctx.NodesManager.RegisterNode(rpc.NodeType, rpc.NodeBuilder)
+
+	// Modules
 	ctx.ModulesManager.RegisterModule("example", modules.ExampleBlockBuilder)
 
 	err := cli.NewDefaultIndexerCLI(ctx).Execute()
