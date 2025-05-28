@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/goccy/go-json"
+
 	"github.com/milkyway-labs/chain-indexer/cosmos/node/rpc"
 )
 
@@ -12,7 +13,7 @@ func (suite *NodeTestSuite) TestCelestiaGetBlockResults() {
 	suite.SetupSuite(rpc.NewConfig(
 		"https://celestia-rpc.publicnode.com",
 		time.Second*10,
-		nil,
+		true,
 		true,
 	))
 

@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/milkyway-labs/chain-indexer/node"
 	"github.com/milkyway-labs/chain-indexer/types"
-	"gopkg.in/yaml.v3"
 )
 
 const NodeType = "cosmos-rpc"
@@ -20,13 +21,13 @@ func NodeBuilder(
 	var config Config
 	err := yaml.Unmarshal(rawConfig, &config)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshal cosmos-rpc node config %w", err)
+		return nil, fmt.Errorf("unmarshal %s node config: %w", NodeType, err)
 	}
 
 	// Validate the configurations
 	err = config.Validate()
 	if err != nil {
-		return nil, fmt.Errorf("invalid cosmos-rpc node config %w", err)
+		return nil, fmt.Errorf("invalid %s node config: %w", NodeType, err)
 	}
 
 	indexerCtx := types.GetIndexerContext(ctx)

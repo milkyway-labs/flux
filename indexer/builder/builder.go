@@ -3,6 +3,7 @@ package builder
 import (
 	"context"
 	"fmt"
+	"maps"
 
 	"gopkg.in/yaml.v3"
 
@@ -43,12 +44,12 @@ func (b *IndexersBuilder) BuildAll(ctx context.Context, cfg *types.Config) ([]in
 	}
 
 	if err := cfg.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid config %w", err)
+		return nil, fmt.Errorf("invalid config: %w", err)
 	}
 
 	logger, err := utils.NewLoggerFromConfig(&cfg.Logging)
 	if err != nil {
-		return nil, fmt.Errorf("creating logger instance %w", err)
+		return nil, fmt.Errorf("create logger instance: %w", err)
 	}
 
 	indexers := make([]indexer.Indexer, len(cfg.Indexers))
@@ -59,19 +60,19 @@ func (b *IndexersBuilder) BuildAll(ctx context.Context, cfg *types.Config) ([]in
 		// Build the database's instance
 		database, err := b.buildDatabase(ctx, cfg, indexerCfg.DatabaseID)
 		if err != nil {
-			return nil, fmt.Errorf("build database for indexer %s, %w", indexerCfg.Name, err)
+			return nil, fmt.Errorf("build database for indexer %s: %w", indexerCfg.Name, err)
 		}
 
 		// Build the indexer's node
 		node, err := b.buildNode(ctx, cfg, indexerCfg.NodeID)
 		if err != nil {
-			return nil, fmt.Errorf("build node for indexer %s, %w", indexerCfg.Name, err)
+			return nil, fmt.Errorf("build node for indexer %s: %w", indexerCfg.Name, err)
 		}
 
 		// Build the indexer's modules
 		modules, err := b.buildModules(ctx, cfg, database, node, &indexerCfg)
 		if err != nil {
-			return nil, fmt.Errorf("build modules for indexer %s, %w", indexerCfg.Name, err)
+			return nil, fmt.Errorf("build modules for indexer %s: %w", indexerCfg.Name, err)
 		}
 
 		// Build the indexer
@@ -87,12 +88,12 @@ func (b *IndexersBuilder) BuildByName(ctx context.Context, cfg *types.Config, na
 	}
 
 	if err := cfg.Validate(); err != nil {
-		return indexer.Indexer{}, fmt.Errorf("invalid config %w", err)
+		return indexer.Indexer{}, fmt.Errorf("invalid config: %w", err)
 	}
 
 	logger, err := utils.NewLoggerFromConfig(&cfg.Logging)
 	if err != nil {
-		return indexer.Indexer{}, fmt.Errorf("creating logger instance %w", err)
+		return indexer.Indexer{}, fmt.Errorf("create logger instance: %w", err)
 	}
 
 	indexerCfg, err := cfg.GetIndexerConfig(name)
@@ -106,19 +107,19 @@ func (b *IndexersBuilder) BuildByName(ctx context.Context, cfg *types.Config, na
 	// Build the database's instance
 	database, err := b.buildDatabase(ctx, cfg, indexerCfg.DatabaseID)
 	if err != nil {
-		return indexer.Indexer{}, fmt.Errorf("build database for indexer %s, %w", indexerCfg.Name, err)
+		return indexer.Indexer{}, fmt.Errorf("build database for indexer %s: %w", indexerCfg.Name, err)
 	}
 
 	// Build the indexer's node
 	node, err := b.buildNode(ctx, cfg, indexerCfg.NodeID)
 	if err != nil {
-		return indexer.Indexer{}, fmt.Errorf("build node for indexer %s, %w", indexerCfg.Name, err)
+		return indexer.Indexer{}, fmt.Errorf("build node for indexer %s: %w", indexerCfg.Name, err)
 	}
 
 	// Build the indexer's modules
 	modules, err := b.buildModules(ctx, cfg, database, node, indexerCfg)
 	if err != nil {
-		return indexer.Indexer{}, fmt.Errorf("build modules for indexer %s, %w", indexerCfg.Name, err)
+		return indexer.Indexer{}, fmt.Errorf("build modules for indexer %s: %w", indexerCfg.Name, err)
 	}
 
 	// Build the indexer
@@ -177,15 +178,19 @@ func (b *IndexersBuilder) buildModules(
 	modules := make([]modules.Module, len(indexerCfg.Modules))
 
 	for i, moduleName := range indexerCfg.Modules {
-		// Get the config from the indexer config definitions
-		moduleCfg, foundModuleCfg := indexerCfg.OverrideModuleConfig[moduleName]
+		moduleCfg, foundModuleCfg := cfg.Modules[moduleName]
 		if !foundModuleCfg {
-			// If not found try to get it from the global modules config
-			moduleCfg, foundModuleCfg = cfg.Modules[moduleName]
+			moduleCfg = types.RawConfig{}
+		}
+		// If OverrideModuleConfig is set for this module, override the module config
+		// with it
+		overrideModuleCfg, foundOverrideModuleCfg := indexerCfg.OverrideModuleConfig[moduleName]
+		if foundOverrideModuleCfg {
+			maps.Copy(moduleCfg, overrideModuleCfg)
 		}
 
 		// Convert the module config back to its binary representation
-		var rawConfig []byte = nil
+		var rawConfig []byte
 		if foundModuleCfg {
 			byteConfig, err := yaml.Marshal(moduleCfg)
 			if err != nil {
@@ -197,7 +202,7 @@ func (b *IndexersBuilder) buildModules(
 		// Build the module
 		module, err := b.modulesManager.GetModule(ctx, moduleName, db, node, rawConfig)
 		if err != nil {
-			return nil, fmt.Errorf("build module `%s` for indexer `%s`, %w", moduleName, indexerCfg.Name, err)
+			return nil, fmt.Errorf("build module `%s` for indexer `%s`: %w", moduleName, indexerCfg.Name, err)
 		}
 		modules[i] = module
 	}

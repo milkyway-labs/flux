@@ -52,7 +52,7 @@ func ParseConfig(configPath string) (*Config, error) {
 
 func (cfg *Config) Validate() error {
 	if err := cfg.Logging.Validate(); err != nil {
-		return fmt.Errorf("invalid logging config %w", err)
+		return fmt.Errorf("invalid logging config: %w", err)
 	}
 
 	if len(cfg.Databases) == 0 {
@@ -140,7 +140,7 @@ func (cfg *LoggingConfig) UnmarshalYAML(unmarshal func(any) error) error {
 func (cfg *LoggingConfig) Validate() error {
 	_, err := zerolog.ParseLevel(cfg.LogLevel)
 	if err != nil {
-		return fmt.Errorf("invalid log_level %s, %w", cfg.LogLevel, err)
+		return fmt.Errorf("invalid log_level %s: %w", cfg.LogLevel, err)
 	}
 
 	if cfg.LogFormat != "json" && cfg.LogFormat != "text" {

@@ -4,9 +4,10 @@ import (
 	"context"
 	"testing"
 
-	cosmosrpc "github.com/milkyway-labs/chain-indexer/cosmos/node/rpc"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
+
+	cosmosrpc "github.com/milkyway-labs/chain-indexer/cosmos/node/rpc"
 )
 
 func TestDatabaseTestSuite(t *testing.T) {

@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/rs/zerolog"
+
 	cosmostypes "github.com/milkyway-labs/chain-indexer/cosmos/types"
 	"github.com/milkyway-labs/chain-indexer/node"
 	"github.com/milkyway-labs/chain-indexer/rpc/jsonrpc2"
 	"github.com/milkyway-labs/chain-indexer/types"
-	"github.com/rs/zerolog"
 )
 
 var _ node.Node = &Node{}
@@ -26,7 +27,7 @@ func NewNode(ctx context.Context, logger zerolog.Logger, cfg Config) (*Node, err
 		Timeout: cfg.RequestTimeout,
 	})
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("create rpc client: %w", err)
 	}
 
 	var res StatusResponse
@@ -83,16 +84,18 @@ func (r *Node) GetBlock(ctx context.Context, height types.Height) (types.Block, 
 	txs := make([]cosmostypes.Tx, len(blockResultsResponse.TxsResults))
 	for txIndex, txResult := range blockResultsResponse.TxsResults {
 		var txEvents cosmostypes.ABCIEvents
-		if r.cfg.TxEventsFromEvents(height) {
-			txEvents = txResult.Events
-		} else if txResult.Code == 0 {
+		if r.cfg.TxEventsFromLog {
 			// We should parse the events from the log, ensure the transaction
 			// was successful before parsing the log
-			parsedEvents, err := ParseEventsFromTxLog(txResult.Log)
-			if err != nil {
-				return nil, fmt.Errorf("parsing tx.log, height: %d, txIndex: %d, %w", height, txIndex, err)
+			if txResult.Code == 0 {
+				parsedEvents, err := ParseEventsFromTxLog(txResult.Log)
+				if err != nil {
+					return nil, fmt.Errorf("parse tx.log (height %d, txIndex %d): %w", height, txIndex, err)
+				}
+				txEvents = parsedEvents
 			}
-			txEvents = parsedEvents
+		} else {
+			txEvents = txResult.Events
 		}
 
 		txs[txIndex] = cosmostypes.NewTx(
@@ -108,37 +111,37 @@ func (r *Node) GetBlock(ctx context.Context, height types.Height) (types.Block, 
 	if r.cfg.DecodeBlockEventAttributes {
 		decoded, err := DecodeABCIEvents(blockResultsResponse.BeginBlockEvents)
 		if err != nil {
-			return nil, fmt.Errorf("decoding begin block events, height: %d, %w", height, err)
+			return nil, fmt.Errorf("decode begin block events (height: %d): %w", height, err)
 		}
 		blockResultsResponse.BeginBlockEvents = decoded
 
 		decoded, err = DecodeABCIEvents(blockResultsResponse.EndBlockEvents)
 		if err != nil {
-			return nil, fmt.Errorf("decoding end block events, height: %d, %w", height, err)
+			return nil, fmt.Errorf("decode end block events (height: %d): %w", height, err)
 		}
 		blockResultsResponse.EndBlockEvents = decoded
 
 		decoded, err = DecodeABCIEvents(blockResultsResponse.FinalizeBlockEvents)
 		if err != nil {
-			return nil, fmt.Errorf("decoding finalize block events, height: %d, %w", height, err)
+			return nil, fmt.Errorf("decode finalize block events (height: %d): %w", height, err)
 		}
 		blockResultsResponse.FinalizeBlockEvents = decoded
 	}
 
 	if len(blockResultsResponse.FinalizeBlockEvents) > 0 {
-		// In case we have the finalized blocks lets extract the begin and end
+		// In case we have the finalized blocks let's extract the begin and end
 		// block events.
 		var beginBlocksEvents cosmostypes.ABCIEvents
 		var endBlockEvents cosmostypes.ABCIEvents
 		for _, event := range blockResultsResponse.FinalizeBlockEvents {
-			// Check if the event is a begin block event
+			// Check if the event is a BeginBlock event
 			if _, found := event.FindAttributeFunc(func(a cosmostypes.ABCIEventAttribute) bool {
 				return a.Key == "mode" && a.Value == "BeginBlock"
 			}); found {
 				beginBlocksEvents = append(beginBlocksEvents, event)
 			}
 
-			// Check if the event is a begin block event
+			// Check if the event is an EndBlock event
 			if _, found := event.FindAttributeFunc(func(a cosmostypes.ABCIEventAttribute) bool {
 				return a.Key == "mode" && a.Value == "EndBlock"
 			}); found {

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/goccy/go-json"
+
 	"github.com/milkyway-labs/chain-indexer/cosmos/node/rpc"
 )
 

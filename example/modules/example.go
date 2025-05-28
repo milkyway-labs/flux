@@ -3,13 +3,14 @@ package modules
 import (
 	"context"
 
+	"github.com/rs/zerolog"
+
 	cosmosmodules "github.com/milkyway-labs/chain-indexer/cosmos/modules"
 	"github.com/milkyway-labs/chain-indexer/cosmos/types"
 	"github.com/milkyway-labs/chain-indexer/database"
 	"github.com/milkyway-labs/chain-indexer/modules"
 	"github.com/milkyway-labs/chain-indexer/node"
 	indexertypes "github.com/milkyway-labs/chain-indexer/types"
-	"github.com/rs/zerolog"
 )
 
 var _ cosmosmodules.BlockHandleModule = &ExampleModule{}

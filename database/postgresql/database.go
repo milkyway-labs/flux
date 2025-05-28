@@ -54,7 +54,7 @@ func (db *Database) GetLowestBlock(chainID string) (*types.Height, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("error while getting last block height, error: %s", err)
+		return nil, err
 	}
 
 	return &height, nil
@@ -63,7 +63,7 @@ func (db *Database) GetLowestBlock(chainID string) (*types.Height, error) {
 // GetMissingBlocks implements database.Database.
 func (db *Database) GetMissingBlocks(chainID string, from types.Height, to types.Height) ([]types.Height, error) {
 	if from > to {
-		return nil, fmt.Errorf("invalid range, from(%d) must be higher then to(%d)", from, to)
+		return nil, fmt.Errorf("invalid range, from(%d) must not be greater than to(%d)", from, to)
 	}
 
 	var result []types.Height
