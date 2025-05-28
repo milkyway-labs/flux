@@ -10,6 +10,7 @@ import (
 	"github.com/milkyway-labs/chain-indexer/database"
 	"github.com/milkyway-labs/chain-indexer/modules"
 	"github.com/milkyway-labs/chain-indexer/node"
+	"github.com/milkyway-labs/chain-indexer/prometheus"
 	"github.com/milkyway-labs/chain-indexer/types"
 )
 
@@ -51,17 +52,19 @@ func NewWorker(
 }
 
 // Start the worker logic.
-func (i *Worker) Start(ctx context.Context, wg *sync.WaitGroup) {
+func (w *Worker) Start(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
-	go i.workerLoop(ctx, wg)
+	go w.workerLoop(ctx, wg)
 }
 
-func (i *Worker) workerLoop(ctx context.Context, wg *sync.WaitGroup) {
+func (w *Worker) workerLoop(ctx context.Context, wg *sync.WaitGroup) {
 	defer func() {
 		wg.Done()
-		i.log.Info().Msg("stopping indexing loop")
+		prometheus.WorkersCount.WithLabelValues(w.cfg.Name).Dec()
+		w.log.Info().Msg("stopping indexing loop")
 	}()
-	i.log.Info().Msg("started worker")
+	w.log.Info().Msg("started worker")
+	prometheus.WorkersCount.WithLabelValues(w.cfg.Name).Inc()
 
 	for {
 		select {
@@ -69,51 +72,54 @@ func (i *Worker) workerLoop(ctx context.Context, wg *sync.WaitGroup) {
 			// exit properly on cancellation
 			return
 		default:
-			indexHeight, ok := i.heightsQueue.ContextDequeue(ctx)
+			indexHeight, ok := w.heightsQueue.ContextDequeue(ctx)
 			if !ok {
-				i.log.Warn().Msg("height queue closed, stopping worker")
+				w.log.Warn().Msg("height queue closed, stopping worker")
 				return
 			}
 
 			// Get the block from the node
-			err := i.fetchAndProcessBlock(ctx, indexHeight.Height)
+			err := w.fetchAndProcessBlock(ctx, indexHeight.Height)
 			if err != nil {
-				i.log.Err(err).Uint64("height", uint64(indexHeight.Height)).Msg("get and process block")
-				i.reEnqueueBlock(ctx, indexHeight)
+				w.log.Err(err).Uint64("height", uint64(indexHeight.Height)).Msg("get and process block")
+				w.reEnqueueBlock(ctx, indexHeight)
 			}
 		}
 	}
 }
 
 // fetchAndProcessBlock fetches the block at the provided height and, if fetched successfully, processes it.
-func (i *Worker) fetchAndProcessBlock(ctx context.Context, height types.Height) error {
-	i.log.Debug().Uint64("height", uint64(height)).Msg("fetch block")
+func (w *Worker) fetchAndProcessBlock(ctx context.Context, height types.Height) error {
+	w.log.Debug().Uint64("height", uint64(height)).Msg("fetch block")
 
 	// Get the block from the node
-	block, err := i.node.GetBlock(ctx, height)
+	block, err := w.node.GetBlock(ctx, height)
 	if err != nil {
 		return fmt.Errorf("fetch block %d, %w", height, err)
 	}
 
 	// Process the fetched block
-	err = i.processBlock(i.log, ctx, block)
+	err = w.processBlock(w.log, ctx, block)
 	if err != nil {
 		return fmt.Errorf("process block %d", height)
 	}
 
 	// Save in the database that we have successfully indexed the block
-	err = i.db.SaveIndexedBlock(i.node.GetChainID(), height, block.GetTimeStamp())
+	err = w.db.SaveIndexedBlock(w.node.GetChainID(), height, block.GetTimeStamp())
 	if err != nil {
 		return fmt.Errorf("save block %d as indexed", height)
 	}
 
-	i.log.Debug().Uint64("height", uint64(height)).Msg("block indexed")
+	w.log.Debug().Uint64("height", uint64(height)).Msg("block indexed")
+	prometheus.LatestIndexedHeightByIndexer.
+		WithLabelValues(w.cfg.Name).
+		Set(float64(height))
 
 	return nil
 }
 
-func (i *Worker) processBlock(_ log.Logger, ctx context.Context, b types.Block) error {
-	for _, m := range i.modules {
+func (w *Worker) processBlock(_ log.Logger, ctx context.Context, b types.Block) error {
+	for _, m := range w.modules {
 		// Run the block handling logic
 		if blockHandler, ok := m.(modules.BlockHandleModule); ok {
 			err := blockHandler.HandleBlock(ctx, b)
@@ -136,18 +142,19 @@ func (i *Worker) processBlock(_ log.Logger, ctx context.Context, b types.Block) 
 	return nil
 }
 
-func (i *Worker) reEnqueueBlock(ctx context.Context, indexHeight IndexerHeight) {
+func (w *Worker) reEnqueueBlock(ctx context.Context, indexHeight IndexerHeight) {
 	select {
 	case <-ctx.Done():
-		i.log.Debug().Uint64("height", uint64(indexHeight.Height)).Msg("skip re-enqueue, context canceled")
+		w.log.Debug().Uint64("height", uint64(indexHeight.Height)).Msg("skip re-enqueue, context canceled")
 	default:
 		indexHeight.Attempts += 1
-		if indexHeight.Attempts >= i.cfg.MaxAttempts {
-			i.log.Error().Uint64("height", uint64(indexHeight.Height)).Msg("failed to parse block, reached max attempts")
+		if indexHeight.Attempts >= w.cfg.MaxAttempts {
+			w.log.Error().Uint64("height", uint64(indexHeight.Height)).Msg("failed to parse block, reached max attempts")
+			prometheus.IndexerFailedBlocks.WithLabelValues(w.cfg.Name).Inc()
 			return
 		}
 
-		i.log.Info().Uint64("height", uint64(indexHeight.Height)).Msg("re-enqueue block")
-		i.heightsQueue.DelayedEnqueue(ctx, i.cfg.TimeBeforeRetry, indexHeight)
+		w.log.Info().Uint64("height", uint64(indexHeight.Height)).Msg("re-enqueue block")
+		w.heightsQueue.DelayedEnqueue(ctx, w.cfg.TimeBeforeRetry, indexHeight)
 	}
 }

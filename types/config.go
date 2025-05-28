@@ -12,7 +12,8 @@ import (
 type RawConfig map[string]any
 
 type Config struct {
-	Logging LoggingConfig `yaml:"logging"`
+	Logging    LoggingConfig    `yaml:"logging"`
+	Monitoring MonitoringConfig `yaml:"monitoring"`
 
 	// Databases contains the configurations of the databases that can be
 	// used by the indexers to store the indexed data.
@@ -27,6 +28,11 @@ type Config struct {
 
 	// Indexers represents the indexers that will be spawned.
 	Indexers []IndexerConfig `yaml:"indexers"`
+}
+
+var DefaultConfig = Config{
+	Logging:    DefaultLoggingConfig(),
+	Monitoring: DefaultMonitoringCfg,
 }
 
 func ParseConfig(configPath string) (*Config, error) {
@@ -85,6 +91,19 @@ func (cfg *Config) GetIndexerConfig(name string) (*IndexerConfig, error) {
 	}
 
 	return nil, fmt.Errorf("config for indexer %s not found", name)
+}
+
+func (cfg *Config) UnmarshalYAML(unmarshal func(any) error) error {
+	// Local type to avoid recursion during the unmarshal
+	type privateCfg Config
+	config := privateCfg(DefaultConfig)
+	err := unmarshal(&config)
+	if err != nil {
+		return err
+	}
+
+	*cfg = Config(config)
+	return nil
 }
 
 // ----------------------------------------------------------------------------
@@ -188,8 +207,8 @@ var DefaultIndexerCfg = IndexerConfig{
 // Implements the Unmarshaler interface of the yaml pkg.
 func (cfg *IndexerConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	// Local type to avoid recursion during the unmarshal
-	type privateCfg IndexerConfig
-	config := privateCfg(DefaultIndexerCfg)
+	type privateIndexerCfg IndexerConfig
+	config := privateIndexerCfg(DefaultIndexerCfg)
 	err := unmarshal(&config)
 	if err != nil {
 		return err
@@ -232,5 +251,33 @@ func (cfg *IndexerConfig) Validate() error {
 		return fmt.Errorf("modules list can't be empty")
 	}
 
+	return nil
+}
+
+// ----------------------------------------------------------------------------
+// ---- Monitoring config
+// ----------------------------------------------------------------------------
+
+type MonitoringConfig struct {
+	Enabled bool  `yaml:"enabled"`
+	Port    int16 `yaml:"port"`
+}
+
+var DefaultMonitoringCfg = MonitoringConfig{
+	Enabled: true,
+	Port:    2112,
+}
+
+// Implements the Unmarshaler interface of the yaml pkg.
+func (cfg *MonitoringConfig) UnmarshalYAML(unmarshal func(any) error) error {
+	// Local type to avoid recursion during the unmarshal
+	type privateMonitoringCfg MonitoringConfig
+	config := privateMonitoringCfg(DefaultMonitoringCfg)
+	err := unmarshal(&config)
+	if err != nil {
+		return err
+	}
+
+	*cfg = MonitoringConfig(config)
 	return nil
 }

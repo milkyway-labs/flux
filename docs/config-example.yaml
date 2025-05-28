@@ -5,6 +5,11 @@ logging:
   # The logger format, can be text or json
   mode: "text"
 
+# Prometheus monitoring config
+monitoring:
+  enable: true
+  port: 2112
+
 # Databases that can be used by the indexer
 databases:
   # An example of postgres database
@@ -47,7 +52,7 @@ indexers:
       - "example"
     # Number of time that we retry to parse a block
     max_attempts: 2
-    # Time that will waited before re-enqueing a failed block
+    # Time that waited before re-enqueing a failed block
     time_before_retry: "5s"
 
   # An example of indexer that fetches the data from the `osmosis-mainnet` node
@@ -69,5 +74,5 @@ indexers:
       - "example"
     # Number of time that we retry to parse a block
     max_attempts: 2
-    # Time that will waited before re-enqueing a failed block
+    # Time that waited before re-enqueing a failed block
     time_before_retry: "5s"

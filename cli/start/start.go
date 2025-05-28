@@ -8,8 +8,10 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/milkyway-labs/chain-indexer/cli/types"
 	"github.com/spf13/cobra"
+
+	"github.com/milkyway-labs/chain-indexer/cli/types"
+	"github.com/milkyway-labs/chain-indexer/prometheus"
 )
 
 func NewStartCmd() *cobra.Command {
@@ -28,6 +30,10 @@ func startParsing(ctx context.Context, cmdCtx *types.CliContext) error {
 	if err != nil {
 		return err
 	}
+
+	// Start the monitoring server
+	prometheusServer := prometheus.NewServer(&cfg.Monitoring)
+	prometheusServer.Start()
 
 	indexers, err := cmdCtx.IndexersBuilder.BuildAll(ctx, cfg)
 	if err != nil {
@@ -51,5 +57,7 @@ func startParsing(ctx context.Context, cmdCtx *types.CliContext) error {
 	}
 
 	waitGroup.Wait()
+	prometheusServer.Stop()
+
 	return nil
 }
