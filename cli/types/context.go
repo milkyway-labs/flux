@@ -79,11 +79,11 @@ func (c *CliContext) LoadConfig() (*types.Config, error) {
 	return config, nil
 }
 
-func InjectCmdContext(ctx context.Context, cmdCtx *CliContext) context.Context {
-	return context.WithValue(ctx, ContextKey, cmdCtx)
+func InjectCliContext(ctx context.Context, cliCtx *CliContext) context.Context {
+	return context.WithValue(ctx, ContextKey, cliCtx)
 }
 
-func GetCmdContext(cmd *cobra.Command) *CliContext {
+func GetCliContext(cmd *cobra.Command) *CliContext {
 	var ctx *CliContext
 	currCmd := cmd
 	for {
@@ -100,7 +100,7 @@ func GetCmdContext(cmd *cobra.Command) *CliContext {
 		}
 	}
 	if ctx == nil {
-		panic("no cmd context found, please inject it with the InjectCmdContext function")
+		panic("no CliContext found, please inject it with the InjectCliContext function")
 	}
 
 	// Set the context home path from the cmd flag

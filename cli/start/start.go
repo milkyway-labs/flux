@@ -19,14 +19,14 @@ func NewStartCmd() *cobra.Command {
 		Use:   "start",
 		Short: "Start parsing the blockchain data",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmdCtx := types.GetCmdContext(cmd)
-			return startParsing(cmd.Context(), cmdCtx)
+			ctx := types.GetCliContext(cmd)
+			return startParsing(cmd.Context(), ctx)
 		},
 	}
 }
 
-func startParsing(ctx context.Context, cmdCtx *types.CliContext) error {
-	cfg, err := cmdCtx.LoadConfig()
+func startParsing(ctx context.Context, cliCtx *types.CliContext) error {
+	cfg, err := cliCtx.LoadConfig()
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func startParsing(ctx context.Context, cmdCtx *types.CliContext) error {
 	prometheusServer := prometheus.NewServer(&cfg.Monitoring)
 	prometheusServer.Start()
 
-	indexers, err := cmdCtx.IndexersBuilder.BuildAll(ctx, cfg)
+	indexers, err := cliCtx.IndexersBuilder.BuildAll(ctx, cfg)
 	if err != nil {
 		return err
 	}

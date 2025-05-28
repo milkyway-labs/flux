@@ -18,7 +18,7 @@ func NewRootCommad(ctx context.Context, cmdContext *types.CliContext) *cobra.Com
 by providing an indexed database exposing aggregated resources.`, cmdContext.GetName()),
 	}
 
-	rootCmd.SetContext(types.InjectCmdContext(ctx, cmdContext))
+	rootCmd.SetContext(types.InjectCliContext(ctx, cmdContext))
 
 	// Set the default home path
 	home, _ := os.UserHomeDir()

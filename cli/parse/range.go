@@ -19,7 +19,7 @@ func NewParseBlocksRangeCmd() *cobra.Command {
 		Short: "Re-parse a range of blocks, if the end-height is not provided, we sync only the block at the start-height",
 		Args:  cobra.RangeArgs(2, 3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := clitypes.GetCmdContext(cmd)
+			cliCtx := clitypes.GetCliContext(cmd)
 			indexerName := args[0]
 			startHeight, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
@@ -44,19 +44,19 @@ func NewParseBlocksRangeCmd() *cobra.Command {
 
 func parseBlocksRange(
 	ctx context.Context,
-	cmdCtx *clitypes.CliContext,
+	cliCtx *clitypes.CliContext,
 	indexerName string,
 	startHeight types.Height,
 	endHeight types.Height,
 ) error {
 	// Load the indexer config
-	cfg, err := cmdCtx.LoadConfig()
+	cfg, err := cliCtx.LoadConfig()
 	if err != nil {
 		return err
 	}
 
 	// Build the requested requestedIndexer
-	requestedIndexer, err := cmdCtx.IndexersBuilder.BuildByName(ctx, cfg, indexerName)
+	requestedIndexer, err := cliCtx.IndexersBuilder.BuildByName(ctx, cfg, indexerName)
 	if err != nil {
 		return err
 	}
