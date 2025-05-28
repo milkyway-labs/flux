@@ -12,6 +12,7 @@ A complete configuration example can be found [here](./config-example.yaml).
 The configuration file includes the following sections:
 
 * [logging](#logging): Defines the log format and verbosity level.
+* [monitoring](#monitoring): Defines the prometheus exporter configuration.
 * [databases](#databases): Contains configurations for databases that can be used by an `Indexer`.
 * [nodes](#nodes): Contains configurations for the nodes that can be used by an `Indexer`.
 * [modules](#modules): Contains module-specific configurations.
@@ -31,6 +32,21 @@ Fields:
 
 * `format`: Specifies the log format. Valid values are `text` and `json`.
 * `level`: Specifies the log verbosity. For supported levels, refer to the [zerolog documentation](https://github.com/rs/zerolog/blob/9dacc014f38d60f563c2ab18719aec11fc06765c/globals.go#L36).
+
+### Monitoring
+
+Below is an example of a valid `monitoring` configuration:
+
+```yaml
+monitoring:
+  enabled: true
+  port: 2112
+```
+
+Fields:
+
+* `enabled`: Specifies if the prometheus exporter should be enabled. Defaults to `true`.
+* `port`: Port on which the prometheus exporter will listen. Defaults to `2112`.
 
 ### Databases
 
