@@ -11,26 +11,13 @@ import (
 	"github.com/milkyway-labs/chain-indexer/modules"
 	"github.com/milkyway-labs/chain-indexer/node"
 	"github.com/milkyway-labs/chain-indexer/types"
-	"github.com/milkyway-labs/chain-indexer/utils"
 )
 
-// indexHeight represents the struct used by the indexer to
-// instruct a worker to fetch a block from the chain and keep track of
-// the fetch attempts.
-type indexHeight struct {
-	Height   types.Height
-	Attempts uint32
-}
-
-func newIndexHeight(height types.Height) indexHeight {
-	return indexHeight{
-		Height:   height,
-		Attempts: 0,
-	}
-}
-
 type Indexer struct {
+	// Indexer's configuration
 	cfg *types.IndexerConfig
+
+	// Logger used by the indexer
 	log log.Logger
 
 	// Database used by the indexer to store its state.
@@ -41,11 +28,14 @@ type Indexer struct {
 
 	// Channel used by the workers to retrieve the height of the
 	// blocks to index.
-	HeightsQueue *Queue[indexHeight]
+	heightsQueue *Queue[IndexerHeight]
 
 	// List of modules that will be used by the indexer to index data from
 	// the chain.
 	modules []modules.Module
+
+	// Instance of HeightProducer that will provide the blocks to parse.
+	heightProducer HeightProducer
 }
 
 func NewIndexer(
@@ -55,12 +45,16 @@ func NewIndexer(
 	node node.Node,
 	modules []modules.Module,
 ) Indexer {
+	logger := log.With().
+		Str("indexer", cfg.Name).
+		Str("chain-id", node.GetChainID()).
+		Logger()
 	return Indexer{
 		cfg:          cfg,
-		log:          log.With().Str("indexer", cfg.Name).Str("chain_id", node.GetChainID()).Logger(),
+		log:          logger,
 		db:           db,
 		node:         node,
-		HeightsQueue: NewQueue[indexHeight](cfg.HeightQueueSize),
+		heightsQueue: NewQueue[IndexerHeight](cfg.HeightQueueSize),
 		modules:      modules,
 	}
 }
@@ -72,196 +66,90 @@ func (i *Indexer) GetName() string {
 
 // Start starts the indexer.
 func (i *Indexer) Start(ctx context.Context, wg *sync.WaitGroup) error {
-	// Fetch the current node height
-	currentHeigh, err := i.node.GetCurrentHeight(ctx)
-	if err != nil {
-		return fmt.Errorf("get current node height: %w", err)
-	}
-	i.log.Debug().Uint64("height", uint64(currentHeigh)).Msg("got current height")
+	heightProducer := i.heightProducer
 
-	var startHeight types.Height
-	if i.cfg.StartHeight != nil {
-		// Start from the height specified in the config
-		startHeight = *i.cfg.StartHeight
-	} else {
-		startHeight = currentHeigh
+	// If we don't have a height producer, we build the default one.
+	if heightProducer == nil {
+		producer, err := i.buildDefaultHeightProducer(ctx)
+		if err != nil {
+			return fmt.Errorf("build default height producer: %w", err)
+		}
+		heightProducer = producer
 	}
 
-	// Get the lowest indexed block
-	lowestAvailableBlock, err := i.db.GetLowestBlock(i.node.GetChainID())
-	if err != nil {
-		return fmt.Errorf("get lowest block %w", err)
-	}
-
-	// If this is available, we look for missing block from this height.
-	if lowestAvailableBlock == nil {
-		lowestAvailableBlock = &startHeight
-	}
-
-	// Get the blocks that are missing and we need to index
-	missingBlocks, err := i.db.GetMissingBlocks(i.node.GetChainID(), *lowestAvailableBlock, currentHeigh)
-	if err != nil {
-		return fmt.Errorf("get missing blocks: %w", err)
-	}
-	i.log.Debug().Int("missing", len(missingBlocks)).Msg("got missing blocks")
-
-	// Start the worker that listen for new block produced by the node
+	// Start the worker that produces the heights to be fetched by the workers.
 	wg.Add(1)
-	go i.observeProducedBlocksLoop(ctx, wg, currentHeigh+1, missingBlocks)
+	go i.equeueHeightsLoop(ctx, wg, heightProducer)
 
 	// Starts the indexing workers
 	for index := int64(0); index < int64(i.cfg.Workers); index++ {
-		wg.Add(1)
-		go i.indexingLoop(ctx, wg)
+		worker := NewWorker(i.cfg, i.log, i.heightsQueue, i.db, i.node, i.modules)
+		worker.Start(ctx, wg)
 	}
 
 	return nil
 }
 
-// FetchAndProcessBlock fetches the block at the provided height and, if fetched successfully, processes it.
-func (i *Indexer) FetchAndProcessBlock(ctx context.Context, height types.Height) error {
-	i.log.Debug().Uint64("height", uint64(height)).Msg("fetch block")
-
-	// Get the block from the node
-	block, err := i.node.GetBlock(ctx, height)
-	if err != nil {
-		return fmt.Errorf("fetch block %d, %w", height, err)
-	}
-
-	// Process the fetched block
-	err = i.processBlock(i.log, ctx, block)
-	if err != nil {
-		return fmt.Errorf("process block %d", height)
-	}
-
-	// Save in the database that we have successfully indexed the block
-	err = i.db.SaveIndexedBlock(i.node.GetChainID(), height, block.GetTimeStamp())
-	if err != nil {
-		return fmt.Errorf("save block %d as indexed", height)
-	}
-
-	i.log.Debug().Uint64("height", uint64(height)).Msg("block indexed")
-
-	return nil
+// WithCustomHeightProducer allows to define a custom HeightProducer that provides
+// the heights to parse.
+func (i *Indexer) WithCustomHeightProducer(producer HeightProducer) *Indexer {
+	i.heightProducer = producer
+	return i
 }
 
-func (i *Indexer) observeProducedBlocksLoop(
+// buildDefaultHeightProducer builds the default height producer, this producer
+// will produce the height of the un-indexed blocks from first indexed block or the configured start height
+// in case is the first start to the current node height and starts monitor the node for new blocks.
+func (i *Indexer) buildDefaultHeightProducer(ctx context.Context) (HeightProducer, error) {
+	currentNodeHeigh, err := i.node.GetCurrentHeight(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get current node height: %w", err)
+	}
+
+	var missingBlockStartHeight types.Height
+	if i.cfg.StartHeight != nil {
+		// Start from the height specified in the config
+		missingBlockStartHeight = *i.cfg.StartHeight
+	} else {
+		// Get the lowest indexed block.
+		lowestAvailableBlock, err := i.db.GetLowestBlock(i.node.GetChainID())
+		if err != nil {
+			return nil, fmt.Errorf("get lowest block %w", err)
+		}
+
+		// In case we have an indexed block and is lower then the current node
+		// height check the missing block from this height
+		if lowestAvailableBlock != nil && *lowestAvailableBlock < currentNodeHeigh {
+			missingBlockStartHeight = *lowestAvailableBlock
+		} else {
+			// We don't have any indexed block or the current node height is lower
+			// than the lowest indexed block, which is wired. In those cases
+			// start looking for un-indexed block from the current node height.
+			missingBlockStartHeight = currentNodeHeigh
+		}
+	}
+
+	// Get the blocks that are missing and we need to index
+	missingBlocks, err := i.db.GetMissingBlocks(i.node.GetChainID(), missingBlockStartHeight, currentNodeHeigh)
+	if err != nil {
+		return nil, fmt.Errorf("get missing blocks: %w", err)
+	}
+
+	return NewCombinedHeightProducer(
+		NewListHeightProducer(missingBlocks),
+		NewNodeHeightProducer(i.log, i.node, i.cfg.NodePollingInterval, currentNodeHeigh),
+	), nil
+}
+
+func (i *Indexer) equeueHeightsLoop(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	startHeight types.Height,
-	missingHeights []types.Height,
+	heightProducer HeightProducer,
 ) {
 	defer func() {
-		i.HeightsQueue.Close()
-		i.log.Info().Str("chain-id", i.node.GetChainID()).Msg("stopping node monitoring loop")
+		i.heightsQueue.Close()
 		wg.Done()
 	}()
 
-	i.log.Info().Str("chain-id", i.node.GetChainID()).Msg("starting node monitoring logic")
-
-	// Enqueue the missing height in the height to index
-	for _, height := range missingHeights {
-		if !i.HeightsQueue.EnqueueWithContext(ctx, newIndexHeight(height)) {
-			break
-		}
-	}
-
-	// Start the indexing loop
-	indexerHeight := startHeight
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			if !utils.SleepContext(ctx, i.cfg.NodePollingInterval) {
-				continue
-			}
-			// Get the block from the node
-			currentNodeHeight, err := i.node.GetCurrentHeight(ctx)
-			if err != nil {
-				i.log.Err(err).Msg("get current node height")
-				continue
-			}
-			if currentNodeHeight < indexerHeight {
-				i.log.Warn().
-					Uint64("current", uint64(currentNodeHeight)).
-					Uint64("indexer", uint64(indexerHeight)).
-					Msg("got node height lower then current indexer height, maybe the node is behind a load balancer")
-				continue
-			}
-			for height := indexerHeight; height <= currentNodeHeight; height++ {
-				i.HeightsQueue.EnqueueWithContext(ctx, newIndexHeight(height))
-			}
-			indexerHeight = currentNodeHeight
-		}
-	}
-}
-
-func (i *Indexer) indexingLoop(ctx context.Context, wg *sync.WaitGroup) {
-	defer func() {
-		wg.Done()
-		i.log.Info().Msg("stopping indexing loop")
-	}()
-	i.log.Info().Msg("started worker")
-
-	for {
-		select {
-		case <-ctx.Done():
-			// exit properly on cancellation
-			return
-		default:
-			indexHeight, ok := i.HeightsQueue.ContextDequeue(ctx)
-			if !ok {
-				i.log.Warn().Msg("height queue closed, stopping worker")
-				return
-			}
-
-			// Get the block from the node
-			err := i.FetchAndProcessBlock(ctx, indexHeight.Height)
-			if err != nil {
-				i.log.Err(err).Uint64("height", uint64(indexHeight.Height)).Msg("get and process block")
-				i.reEnqueueBlock(ctx, indexHeight)
-			}
-		}
-	}
-}
-
-func (i *Indexer) processBlock(_ log.Logger, ctx context.Context, b types.Block) error {
-	for _, m := range i.modules {
-		// Run the block handling logic
-		if blockHandler, ok := m.(modules.BlockHandleModule); ok {
-			err := blockHandler.HandleBlock(ctx, b)
-			if err != nil {
-				return fmt.Errorf("handle block, module: %s err: %w", m.GetName(), err)
-			}
-		}
-
-		// Run the tx handling logic
-		if txHandler, ok := m.(modules.TxHandleModule); ok {
-			for _, tx := range b.GetTxs() {
-				err := txHandler.HandleTx(ctx, b, tx)
-				if err != nil {
-					return fmt.Errorf("handle tx, module: %s, tx: %s err: %w", m.GetName(), tx.GetHash(), err)
-				}
-			}
-		}
-	}
-
-	return nil
-}
-
-func (i *Indexer) reEnqueueBlock(ctx context.Context, indexHeight indexHeight) {
-	select {
-	case <-ctx.Done():
-		i.log.Debug().Uint64("height", uint64(indexHeight.Height)).Msg("skip re-enqueue, context canceled")
-	default:
-		indexHeight.Attempts += 1
-		if indexHeight.Attempts >= i.cfg.MaxAttempts {
-			i.log.Error().Uint64("height", uint64(indexHeight.Height)).Msg("failed to parse block, reached max attempts")
-			return
-		}
-
-		i.log.Info().Uint64("height", uint64(indexHeight.Height)).Msg("re-enqueue block")
-		i.HeightsQueue.DelayedEnqueue(ctx, i.cfg.TimeBeforeRetry, indexHeight)
-	}
+	heightProducer.EnqueueHeights(ctx, i.heightsQueue)
 }
