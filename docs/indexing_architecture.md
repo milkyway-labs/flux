@@ -20,23 +20,21 @@ The architecture combines parallel processing with modular data handling.
 
 ![Fetching logic diagram](./images/fetching_logic.png "Fetching logic")
 
-### Key Components  
+### Key Components
 
-- **Monitor** (`observeProducedBlocksLoop`): Continuously checks blockchain height  
+- **HeightProducer**: Produces the heights that will be fetched by the workers 
 - **HeightsQueue**: Stores block heights needing processing  
-- **Workers** (`indexingLoop`): Parallel processes that handle actual indexing  
+- **Workers**: Parallel processes that handle actual indexing  
 - **Processing Modules**: Specialized handlers for blocks or transactions  
 
-### Workflow Stages  
+### Workflow Stages
 
-#### 1. Block Monitoring & Detection  
+#### 1. Heights production
 
 ```
-Indexer → Monitor → Node → HeightsQueue  
+Indexer → HeightProducer → HeightsQueue
 ```
-- Checks current blockchain height at regular intervals  
-- Identifies gaps between last indexed block and current chain height  
-- Enqueues missing block heights for processing  
+- The HeightProducer enqueues heights to be processed
 
 #### 2. Parallel Block Processing  
 
