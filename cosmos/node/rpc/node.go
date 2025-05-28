@@ -22,7 +22,7 @@ type Node struct {
 }
 
 func NewNode(ctx context.Context, logger zerolog.Logger, cfg Config) (*Node, error) {
-	jsonRpcClient, err := jsonrpc2.NewClient(cfg.URL, &http.Client{
+	jsonRPCClient, err := jsonrpc2.NewClient(cfg.URL, &http.Client{
 		Timeout: cfg.RequestTimeout,
 	})
 	if err != nil {
@@ -30,14 +30,14 @@ func NewNode(ctx context.Context, logger zerolog.Logger, cfg Config) (*Node, err
 	}
 
 	var res StatusResponse
-	if err := jsonRpcClient.Call(ctx, "status", StatusRequest{}, &res); err != nil {
+	if err := jsonRPCClient.Call(ctx, "status", StatusRequest{}, &res); err != nil {
 		return nil, fmt.Errorf("get chain id: %w", err)
 	}
 
 	return &Node{
 		cfg:     cfg,
 		logger:  logger.With().Str("cosmos-node", cfg.URL).Logger(),
-		client:  jsonRpcClient,
+		client:  jsonRPCClient,
 		chainID: res.NodeInfo.Network,
 	}, nil
 }
@@ -85,16 +85,14 @@ func (r *Node) GetBlock(ctx context.Context, height types.Height) (types.Block, 
 		var txEvents cosmostypes.ABCIEvents
 		if r.cfg.TxEventsFromEvents(height) {
 			txEvents = txResult.Events
-		} else {
+		} else if txResult.Code == 0 {
 			// We should parse the events from the log, ensure the transaction
 			// was successful before parsing the log
-			if txResult.Code == 0 {
-				parsedEvents, err := ParseEventsFromTxLog(txResult.Log)
-				if err != nil {
-					return nil, fmt.Errorf("parsing tx.log, height: %d, txIndex: %d, %w", height, txIndex, err)
-				}
-				txEvents = parsedEvents
+			parsedEvents, err := ParseEventsFromTxLog(txResult.Log)
+			if err != nil {
+				return nil, fmt.Errorf("parsing tx.log, height: %d, txIndex: %d, %w", height, txIndex, err)
 			}
+			txEvents = parsedEvents
 		}
 
 		txs[txIndex] = cosmostypes.NewTx(

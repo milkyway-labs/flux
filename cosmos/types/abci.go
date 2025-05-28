@@ -17,9 +17,9 @@ func (e *ABCIEvent) FindAttribute(key string) (ABCIEventAttribute, bool) {
 
 func (e *ABCIEvent) FindAttributes(key string) []ABCIEventAttribute {
 	var results []ABCIEventAttribute
-	for _, attribue := range e.Attributes {
-		if attribue.Key == key {
-			results = append(results, attribue)
+	for _, attribute := range e.Attributes {
+		if attribute.Key == key {
+			results = append(results, attribute)
 		}
 	}
 

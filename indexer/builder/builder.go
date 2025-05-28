@@ -135,8 +135,8 @@ func (b *IndexersBuilder) buildDatabase(
 		return nil, fmt.Errorf("database %s not found", dbID)
 	}
 
-	dbType, foundDbType := databaseCfg["type"].(string)
-	if !foundDbType {
+	dbType, foundDBType := databaseCfg["type"].(string)
+	if !foundDBType {
 		return nil, fmt.Errorf("can't find 'type' field in database %s", dbID)
 	}
 
@@ -170,7 +170,7 @@ func (b *IndexersBuilder) buildNode(ctx context.Context, cfg *types.Config, node
 func (b *IndexersBuilder) buildModules(
 	ctx context.Context,
 	cfg *types.Config,
-	DB database.Database,
+	db database.Database,
 	node node.Node,
 	indexerCfg *types.IndexerConfig,
 ) ([]modules.Module, error) {
@@ -195,7 +195,7 @@ func (b *IndexersBuilder) buildModules(
 		}
 
 		// Build the module
-		module, err := b.modulesManager.GetModule(ctx, moduleName, DB, node, rawConfig)
+		module, err := b.modulesManager.GetModule(ctx, moduleName, db, node, rawConfig)
 		if err != nil {
 			return nil, fmt.Errorf("build module `%s` for indexer `%s`, %w", moduleName, indexerCfg.Name, err)
 		}

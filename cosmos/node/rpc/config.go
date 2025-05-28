@@ -55,7 +55,7 @@ func DefaultConfig(url string) Config {
 }
 
 // Implements the Unmarshaler interface of the yaml pkg.
-func (cfg *Config) UnmarshalYAML(unmarshal func(any) error) error {
+func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 	// Local type to avoid recursion during the unmarshal
 	type privateCfg Config
 	config := privateCfg(DefaultConfig(""))
@@ -64,6 +64,6 @@ func (cfg *Config) UnmarshalYAML(unmarshal func(any) error) error {
 		return err
 	}
 
-	*cfg = Config(config)
+	*c = Config(config)
 	return nil
 }
