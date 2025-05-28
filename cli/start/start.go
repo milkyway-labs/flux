@@ -9,7 +9,6 @@ import (
 	"syscall"
 
 	"github.com/milkyway-labs/chain-indexer/cli/types"
-	"github.com/milkyway-labs/chain-indexer/indexer/builder"
 	"github.com/spf13/cobra"
 )
 
@@ -25,14 +24,12 @@ func NewStartCmd() *cobra.Command {
 }
 
 func startParsing(ctx context.Context, cmdCtx *types.CliContext) error {
-	indexersBuilder := builder.NewIndexersBuilder(cmdCtx.DatabasesManager, cmdCtx.NodesManager, cmdCtx.ModulesManager)
-
 	cfg, err := cmdCtx.LoadConfig()
 	if err != nil {
 		return err
 	}
 
-	indexers, err := indexersBuilder.BuildAll(ctx, cfg)
+	indexers, err := cmdCtx.IndexersBuilder.BuildAll(ctx, cfg)
 	if err != nil {
 		return err
 	}

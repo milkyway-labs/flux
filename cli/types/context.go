@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	database "github.com/milkyway-labs/chain-indexer/database/manager"
+	indexerbuilder "github.com/milkyway-labs/chain-indexer/indexer/builder"
 	modulesmanager "github.com/milkyway-labs/chain-indexer/modules/manager"
 	nodemanager "github.com/milkyway-labs/chain-indexer/node/manager"
 	"github.com/milkyway-labs/chain-indexer/types"
@@ -25,16 +26,24 @@ type CliContext struct {
 	DatabasesManager *database.DatabasesManager
 	NodesManager     *nodemanager.NodesManager
 	ModulesManager   *modulesmanager.ModulesManager
+	IndexersBuilder  *indexerbuilder.IndexersBuilder
 }
 
 func NewCliContext(
 	name string,
 ) *CliContext {
+	databaseManager := database.NewDatabasesManager()
+	nodeManager := nodemanager.NewNodesManager()
+	modulesManager := modulesmanager.NewModuleManager()
+
 	return &CliContext{
 		Name:             name,
-		DatabasesManager: database.NewDatabasesManager(),
-		NodesManager:     nodemanager.NewNodesManager(),
-		ModulesManager:   modulesmanager.NewModuleManager(),
+		DatabasesManager: databaseManager,
+		NodesManager:     nodeManager,
+		ModulesManager:   modulesManager,
+		IndexersBuilder: indexerbuilder.NewIndexersBuilder(
+			databaseManager, nodeManager, modulesManager,
+		),
 	}
 }
 
