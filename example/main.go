@@ -14,7 +14,7 @@ func main() {
 	rpc.AddCosmosRPCNodeSupport(ctx.NodesManager)
 	ctx.ModulesManager.RegisterModule("example", modules.ExampleBlockBuilder)
 
-	err := cli.NewSimpleCLI(ctx).Execute()
+	err := cli.NewDefaultIndexerCLI(ctx).Execute()
 	if err != nil {
 		panic(err)
 	}

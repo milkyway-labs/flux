@@ -32,23 +32,23 @@ func (e *ExampleModule) GetName() string {
 
 // HandleBlock implements modules.BlockHandleModule.
 func (e *ExampleModule) HandleBlock(ctx context.Context, block *types.Block) error {
-	for _, tx := range block.Txs {
-		events := tx.Events.GetEventsWithType("transfer")
-		for _, transferEvent := range events {
-			from, hasFrom := transferEvent.FindAttribute("sender")
-			to, hasTo := transferEvent.FindAttribute("recipient")
-			amount, hasAmount := transferEvent.FindAttribute("amount")
-			if hasFrom && hasTo && hasAmount {
-				e.logger.Info().
-					Str("from", from.Value).
-					Str("to", to.Value).
-					Str("amount", amount.Value).
-					Msg("go transfer event")
-			}
-		}
-	}
-
-	e.logger.Info().Uint64("height", uint64(block.GetHeight())).Msg("handled block")
+	// for _, tx := range block.Txs {
+	// 	events := tx.Events.GetEventsWithType("transfer")
+	// 	for _, transferEvent := range events {
+	// 		from, hasFrom := transferEvent.FindAttribute("sender")
+	// 		to, hasTo := transferEvent.FindAttribute("recipient")
+	// 		amount, hasAmount := transferEvent.FindAttribute("amount")
+	// 		if hasFrom && hasTo && hasAmount {
+	// 			// e.logger.Info().
+	// 			// 	Str("from", from.Value).
+	// 			// 	Str("to", to.Value).
+	// 			// 	Str("amount", amount.Value).
+	// 			// 	Msg("go transfer event")
+	// 		}
+	// 	}
+	// }
+	//
+	// e.logger.Info().Uint64("height", uint64(block.GetHeight())).Msg("handled block")
 
 	return nil
 }

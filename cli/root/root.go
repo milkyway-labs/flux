@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func GetRootCommad(ctx context.Context, cmdContext *types.CliContext) *cobra.Command {
+func NewRootCommad(ctx context.Context, cmdContext *types.CliContext) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   cmdContext.GetName(),
 		Short: fmt.Sprintf("%s is a chain data aggregator and exporter", cmdContext.GetName()),
@@ -23,7 +23,11 @@ by providing an indexed database exposing aggregated resources.`, cmdContext.Get
 	// Set the default home path
 	home, _ := os.UserHomeDir()
 	defaultConfigPath := path.Join(home, fmt.Sprintf(".%s", cmdContext.GetName()))
-	rootCmd.PersistentFlags().String(types.FlagHome, defaultConfigPath, "Set the home folder of the application, where all files will be stored")
+	rootCmd.PersistentFlags().String(
+		types.FlagHome,
+		defaultConfigPath,
+		"Set the home folder of the application, where all files will be stored",
+	)
 
 	return rootCmd
 }
