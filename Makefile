@@ -73,6 +73,12 @@ coverage:
 test-unit:
 	@echo "Executing unit tests..."
 	@go test -mod=readonly -v -coverprofile coverage.txt ./...
+
+test-evm-node:
+	@echo "Executing evm node unit tests..."
+	@go test -mod=readonly $(BUILD_FLAGS) -v -coverprofile coverage.txt github.com/milkyway-labs/chain-indexer/evm/node/rpc
+
+
 .PHONY: test-unit
 
 ###############################################################################
