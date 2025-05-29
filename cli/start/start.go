@@ -52,7 +52,7 @@ func startParsing(ctx context.Context, cliCtx *types.CliContext) error {
 	for _, indexer := range indexers {
 		err := indexer.Start(ctx, &waitGroup)
 		if err != nil {
-			return fmt.Errorf("staring indexer %s, %w", indexer.GetName(), err)
+			return fmt.Errorf("start indexer %s: %w", indexer.GetName(), err)
 		}
 	}
 

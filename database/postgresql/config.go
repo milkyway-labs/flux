@@ -50,7 +50,7 @@ func (c Config) GetPartitionSize() int64 {
 func (c Config) Validate() error {
 	_, err := url.Parse(c.URL)
 	if err != nil {
-		return fmt.Errorf("invalid url %w", err)
+		return fmt.Errorf("invalid url: %w", err)
 	}
 
 	return nil

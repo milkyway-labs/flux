@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/goccy/go-json"
+
 	cosmostypes "github.com/milkyway-labs/chain-indexer/cosmos/types"
 )
 
@@ -52,14 +53,14 @@ func DecodeABCIEvents(events cosmostypes.ABCIEvents) (cosmostypes.ABCIEvents, er
 }
 
 func DecodeABCIEvent(event cosmostypes.ABCIEvent) (cosmostypes.ABCIEvent, error) {
-	decodecAttributes, err := DecodeABCIEventAttributes(event.Attributes)
+	decodedAttributes, err := DecodeABCIEventAttributes(event.Attributes)
 	if err != nil {
-		return cosmostypes.ABCIEvent{}, fmt.Errorf("decoding %s event attributes", event.Type)
+		return cosmostypes.ABCIEvent{}, fmt.Errorf("decode %s event attributes: %w", event.Type, err)
 	}
 
 	return cosmostypes.ABCIEvent{
 		Type:       event.Type,
-		Attributes: decodecAttributes,
+		Attributes: decodedAttributes,
 	}, nil
 }
 

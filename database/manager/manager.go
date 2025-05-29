@@ -21,8 +21,8 @@ func NewDatabasesManager() *DatabasesManager {
 
 // RegisterDatabase register a new database type that can be used by an indexer to
 // store the indexed data.
-func (mm *DatabasesManager) RegisterDatabase(nodeType string, builder Builder) *DatabasesManager {
-	mm.registered[nodeType] = builder
+func (mm *DatabasesManager) RegisterDatabase(dbType string, builder Builder) *DatabasesManager {
+	mm.registered[dbType] = builder
 	return mm
 }
 

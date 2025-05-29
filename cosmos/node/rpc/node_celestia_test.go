@@ -5,15 +5,19 @@ import (
 	"time"
 
 	"github.com/goccy/go-json"
+
 	"github.com/milkyway-labs/chain-indexer/cosmos/node/rpc"
+	"github.com/milkyway-labs/chain-indexer/types"
 )
 
 func (suite *NodeTestSuite) TestCelestiaGetBlockResults() {
+	height := types.MaxHeight
+
 	suite.SetupSuite(rpc.NewConfig(
 		"https://celestia-rpc.publicnode.com",
 		time.Second*10,
-		nil,
-		true,
+		&height,
+		&height,
 	))
 
 	height, err := suite.node.GetCurrentHeight(context.Background())

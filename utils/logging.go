@@ -6,9 +6,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/milkyway-labs/chain-indexer/types"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	"github.com/milkyway-labs/chain-indexer/types"
 )
 
 func NewLoggerFromConfig(cfg *types.LoggingConfig) (zerolog.Logger, error) {
@@ -31,7 +32,7 @@ func NewLoggerFromConfig(cfg *types.LoggingConfig) (zerolog.Logger, error) {
 	// Configure the log level
 	logLevel, err := zerolog.ParseLevel(cfg.LogLevel)
 	if err != nil {
-		return zerolog.Logger{}, fmt.Errorf("parsing log level %w", err)
+		return zerolog.Logger{}, fmt.Errorf("parse log level: %w", err)
 	}
 
 	return logger.Level(logLevel), nil

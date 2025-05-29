@@ -59,7 +59,7 @@ func NewIndexer(
 	}
 }
 
-// GetName get the name that identify the indexer.
+// GetName get the name that identifies the indexer.
 func (i *Indexer) GetName() string {
 	return i.cfg.Name
 }

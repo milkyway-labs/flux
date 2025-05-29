@@ -1,9 +1,14 @@
 package types
 
-import "time"
+import (
+	"math"
+	"time"
+)
 
 // Height type alias used to represent a block chain height.
 type Height uint64
+
+const MaxHeight Height = Height(math.MaxUint64)
 
 // Block represents a generic block produced by a blockchain.
 type Block interface {
