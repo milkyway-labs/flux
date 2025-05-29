@@ -53,23 +53,24 @@ clean:
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
-stop-docker-test:
+stop-test-db:
 	@echo "Stopping Docker container..."
 	@docker stop test-db || true && docker rm test-db || true
 .PHONY: stop-docker-test
 
-start-docker-test: stop-docker-test
+start-test-db: stop-test-db
 	@echo "Starting Docker container..."
 	@docker run --name test-db --rm -e POSTGRES_USER=milkyway -e POSTGRES_PASSWORD=password -e POSTGRES_DB=milkyway -d -p 6432:5432 postgres
+	@sleep 5
 
-.PHONY: start-docker-test
+.PHONY: start-test-db
 
 coverage:
 	@echo "viewing test coverage..."
 	@go tool cover --html=coverage.out
 .PHONY: coverage
 
-test-unit: 
+test-unit:
 	@echo "Executing unit tests..."
 	@go test -mod=readonly -v -coverprofile coverage.txt ./...
 .PHONY: test-unit
