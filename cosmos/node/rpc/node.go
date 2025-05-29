@@ -84,7 +84,7 @@ func (r *Node) GetBlock(ctx context.Context, height types.Height) (types.Block, 
 	txs := make([]cosmostypes.Tx, len(blockResultsResponse.TxsResults))
 	for txIndex, txResult := range blockResultsResponse.TxsResults {
 		var txEvents cosmostypes.ABCIEvents
-		if r.cfg.TxEventsFromLog {
+		if r.cfg.TxEventsFromLog(height) {
 			// We should parse the events from the log, ensure the transaction
 			// was successful before parsing the log
 			if txResult.Code == 0 {
@@ -108,7 +108,7 @@ func (r *Node) GetBlock(ctx context.Context, height types.Height) (types.Block, 
 	}
 
 	// Decode the block events attributes
-	if r.cfg.DecodeBlockEventAttributes {
+	if r.cfg.DecodeBlockEventAttributes(height) {
 		decoded, err := DecodeABCIEvents(blockResultsResponse.BeginBlockEvents)
 		if err != nil {
 			return nil, fmt.Errorf("decode begin block events (height: %d): %w", height, err)
