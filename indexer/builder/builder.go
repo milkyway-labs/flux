@@ -3,7 +3,6 @@ package builder
 import (
 	"context"
 	"fmt"
-	"maps"
 
 	"gopkg.in/yaml.v3"
 
@@ -186,7 +185,7 @@ func (b *IndexersBuilder) buildModules(
 		// with it
 		overrideModuleCfg, foundOverrideModuleCfg := indexerCfg.OverrideModuleConfig[moduleName]
 		if foundOverrideModuleCfg {
-			maps.Copy(moduleCfg, overrideModuleCfg)
+			utils.CopyMap(moduleCfg, overrideModuleCfg)
 		}
 
 		// Convert the module config back to its binary representation
