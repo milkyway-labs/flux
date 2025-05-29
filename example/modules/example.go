@@ -34,8 +34,7 @@ func (e *ExampleModule) GetName() string {
 // HandleBlock implements modules.BlockHandleModule.
 func (e *ExampleModule) HandleBlock(_ context.Context, block *types.Block) error {
 	for _, tx := range block.Txs {
-		events := tx.Events.FindEventsWithType("transfer")
-		for _, transferEvent := range events {
+		for _, transferEvent := range tx.Events.FindEventsWithType("transfer") {
 			from, hasFrom := transferEvent.FindAttribute("sender")
 			to, hasTo := transferEvent.FindAttribute("recipient")
 			amount, hasAmount := transferEvent.FindAttribute("amount")

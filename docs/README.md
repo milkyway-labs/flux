@@ -30,3 +30,16 @@ Guidelines for developing a custom `Module` to index a blockchain:
 
 * [Create block handle module](./create_block_handle_module.md)
 
+
+## Supported chains
+
+Here is the list of the block chains supported by this library:
+
+* [Cosmos](../cosmos/README.md)
+
+## Supported databases
+
+Here is the list of the database backends supported by this library:
+
+* [PostgresSQL](../database/postgresql/README.md)
+
