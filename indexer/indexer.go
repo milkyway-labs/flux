@@ -79,7 +79,7 @@ func (i *Indexer) Start(ctx context.Context, wg *sync.WaitGroup) error {
 
 	// Start the worker that produces the heights to be fetched by the workers.
 	wg.Add(1)
-	go i.equeueHeightsLoop(ctx, wg, heightProducer)
+	go i.enqueueHeightsLoop(ctx, wg, heightProducer)
 
 	// Starts the indexing workers
 	for index := int64(0); index < int64(i.cfg.Workers); index++ {
@@ -101,7 +101,7 @@ func (i *Indexer) WithCustomHeightProducer(producer HeightProducer) *Indexer {
 // will produce the height of the un-indexed blocks from first indexed block or the configured start height
 // in case is the first start to the current node height and starts monitor the node for new blocks.
 func (i *Indexer) buildDefaultHeightProducer(ctx context.Context) (HeightProducer, error) {
-	currentNodeHeigh, err := i.node.GetCurrentHeight(ctx)
+	currentNodeHeight, err := i.node.GetCurrentHeight(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get current node height: %w", err)
 	}
@@ -119,29 +119,29 @@ func (i *Indexer) buildDefaultHeightProducer(ctx context.Context) (HeightProduce
 
 		// In case we have an indexed block and is lower then the current node
 		// height check the missing block from this height
-		if lowestAvailableBlock != nil && *lowestAvailableBlock < currentNodeHeigh {
+		if lowestAvailableBlock != nil && *lowestAvailableBlock < currentNodeHeight {
 			missingBlockStartHeight = *lowestAvailableBlock
 		} else {
 			// We don't have any indexed block or the current node height is lower
 			// than the lowest indexed block, which is wired. In those cases
 			// start looking for un-indexed block from the current node height.
-			missingBlockStartHeight = currentNodeHeigh
+			missingBlockStartHeight = currentNodeHeight
 		}
 	}
 
 	// Get the blocks that are missing and we need to index
-	missingBlocks, err := i.db.GetMissingBlocks(i.node.GetChainID(), missingBlockStartHeight, currentNodeHeigh-1)
+	missingBlocks, err := i.db.GetMissingBlocks(i.node.GetChainID(), missingBlockStartHeight, currentNodeHeight-1)
 	if err != nil {
 		return nil, fmt.Errorf("get missing blocks: %w", err)
 	}
 
 	return NewCombinedHeightProducer(
 		NewListHeightProducer(missingBlocks),
-		NewNodeHeightProducer(i.log, i.node, i.cfg.NodePollingInterval, currentNodeHeigh),
+		NewNodeHeightProducer(i.log, i.node, i.cfg.NodePollingInterval, currentNodeHeight),
 	), nil
 }
 
-func (i *Indexer) equeueHeightsLoop(
+func (i *Indexer) enqueueHeightsLoop(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	heightProducer HeightProducer,
