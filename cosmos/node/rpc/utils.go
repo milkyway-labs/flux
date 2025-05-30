@@ -7,7 +7,7 @@ import (
 
 	"github.com/goccy/go-json"
 
-	cosmostypes "github.com/milkyway-labs/chain-indexer/cosmos/types"
+	cosmostypes "github.com/milkyway-labs/flux/cosmos/types"
 )
 
 func ParseEventsFromTxLog(log string) (cosmostypes.ABCIEvents, error) {

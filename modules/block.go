@@ -3,7 +3,7 @@ package modules
 import (
 	"context"
 
-	"github.com/milkyway-labs/chain-indexer/types"
+	"github.com/milkyway-labs/flux/types"
 )
 
 // BlockHandleModule represent a module that index data by extracting them from

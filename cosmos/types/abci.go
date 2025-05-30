@@ -3,7 +3,7 @@ package types
 import (
 	"slices"
 
-	"github.com/milkyway-labs/chain-indexer/utils"
+	"github.com/milkyway-labs/flux/utils"
 )
 
 type ABCIEventAttribute struct {

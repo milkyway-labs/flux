@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/milkyway-labs/chain-indexer/types"
+	"github.com/milkyway-labs/flux/types"
 )
 
 func NewLoggerFromConfig(cfg *types.LoggingConfig) (zerolog.Logger, error) {

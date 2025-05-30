@@ -6,15 +6,15 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/milkyway-labs/chain-indexer/database"
-	"github.com/milkyway-labs/chain-indexer/types"
+	"github.com/milkyway-labs/flux/database"
+	"github.com/milkyway-labs/flux/types"
 )
 
 const DatabaseType = "postgres"
 
 func DatabaseBuilder(
 	ctx context.Context,
-	id string,
+	_ string,
 	rawConfig []byte,
 ) (database.Database, error) {
 	var config Config

@@ -3,8 +3,8 @@ package rpc
 import (
 	"time"
 
-	cosmostypes "github.com/milkyway-labs/chain-indexer/cosmos/types"
-	"github.com/milkyway-labs/chain-indexer/types"
+	cosmostypes "github.com/milkyway-labs/flux/cosmos/types"
+	"github.com/milkyway-labs/flux/types"
 )
 
 type StatusRequest struct{}

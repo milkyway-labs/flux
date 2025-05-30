@@ -3,8 +3,8 @@ package postgresql_test
 import (
 	"time"
 
-	"github.com/milkyway-labs/chain-indexer/database/postgresql"
-	"github.com/milkyway-labs/chain-indexer/types"
+	"github.com/milkyway-labs/flux/database/postgresql"
+	"github.com/milkyway-labs/flux/types"
 )
 
 func (suite *DbTestSuite) TestGetLowestBlock() {

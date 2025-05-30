@@ -3,7 +3,7 @@ package node
 import (
 	"context"
 
-	"github.com/milkyway-labs/chain-indexer/types"
+	"github.com/milkyway-labs/flux/types"
 )
 
 // Node represents a generic block chain node that can be queried to

@@ -7,11 +7,11 @@ import (
 
 	log "github.com/rs/zerolog"
 
-	"github.com/milkyway-labs/chain-indexer/database"
-	"github.com/milkyway-labs/chain-indexer/modules"
-	"github.com/milkyway-labs/chain-indexer/node"
-	"github.com/milkyway-labs/chain-indexer/prometheus"
-	"github.com/milkyway-labs/chain-indexer/types"
+	"github.com/milkyway-labs/flux/database"
+	"github.com/milkyway-labs/flux/modules"
+	"github.com/milkyway-labs/flux/node"
+	"github.com/milkyway-labs/flux/prometheus"
+	"github.com/milkyway-labs/flux/types"
 )
 
 // Worker represents a component that is responsible of fetching a block

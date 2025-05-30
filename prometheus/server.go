@@ -7,7 +7,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/milkyway-labs/chain-indexer/types"
+	"github.com/milkyway-labs/flux/types"
 )
 
 type Server struct {

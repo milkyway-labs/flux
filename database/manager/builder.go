@@ -3,7 +3,7 @@ package manager
 import (
 	"context"
 
-	"github.com/milkyway-labs/chain-indexer/database"
+	"github.com/milkyway-labs/flux/database"
 )
 
 // Builder represents a function that can be used to build a Database instance,

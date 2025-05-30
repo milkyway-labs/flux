@@ -3,7 +3,7 @@ package types
 import (
 	"time"
 
-	"github.com/milkyway-labs/chain-indexer/types"
+	"github.com/milkyway-labs/flux/types"
 )
 
 // ----------------------------------------------------------------------------

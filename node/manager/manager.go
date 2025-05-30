@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/milkyway-labs/chain-indexer/node"
+	"github.com/milkyway-labs/flux/node"
 )
 
 // NodesManager handle the construction of the Node instances that can

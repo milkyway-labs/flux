@@ -5,12 +5,12 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/milkyway-labs/chain-indexer/cosmos/types"
-	"github.com/milkyway-labs/chain-indexer/database"
-	"github.com/milkyway-labs/chain-indexer/modules"
-	"github.com/milkyway-labs/chain-indexer/modules/adpter"
-	"github.com/milkyway-labs/chain-indexer/node"
-	indexertypes "github.com/milkyway-labs/chain-indexer/types"
+	"github.com/milkyway-labs/flux/cosmos/types"
+	"github.com/milkyway-labs/flux/database"
+	"github.com/milkyway-labs/flux/modules"
+	"github.com/milkyway-labs/flux/modules/adpter"
+	"github.com/milkyway-labs/flux/node"
+	indexertypes "github.com/milkyway-labs/flux/types"
 )
 
 var _ adpter.BlockHandleModule[*types.Block] = &ExampleModule{}
@@ -19,9 +19,9 @@ type ExampleModule struct {
 	logger zerolog.Logger
 }
 
-func ExampleBlockBuilder(ctx context.Context, database database.Database, node node.Node, cfg []byte) (modules.Module, error) {
+func ExampleBlockBuilder(ctx context.Context, _ database.Database, _ node.Node, _ []byte) (modules.Module, error) {
 	indexerCtx := indexertypes.GetIndexerContext(ctx)
-	return adpter.NewBlockHandleAdapter(&ExampleModule{
+	return adpter.NewBlockHandleAdapter[*types.Block](&ExampleModule{
 		logger: indexerCtx.Logger.With().Str("module", "example").Logger(),
 	}), nil
 }
@@ -32,7 +32,7 @@ func (e *ExampleModule) GetName() string {
 }
 
 // HandleBlock implements modules.BlockHandleModule.
-func (e *ExampleModule) HandleBlock(ctx context.Context, block *types.Block) error {
+func (e *ExampleModule) HandleBlock(_ context.Context, block *types.Block) error {
 	for _, tx := range block.Txs {
 		events := tx.Events.FindEventsWithType("transfer")
 		for _, transferEvent := range events {

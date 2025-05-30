@@ -10,8 +10,8 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 
-	"github.com/milkyway-labs/chain-indexer/database"
-	"github.com/milkyway-labs/chain-indexer/types"
+	"github.com/milkyway-labs/flux/database"
+	"github.com/milkyway-labs/flux/types"
 )
 
 // type check to ensure interface is properly implemented

@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/milkyway-labs/chain-indexer/database/postgresql"
+	"github.com/milkyway-labs/flux/database/postgresql"
 )
 
 func TestDatabaseTestSuite(t *testing.T) {

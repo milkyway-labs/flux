@@ -3,7 +3,7 @@ package database
 import (
 	"time"
 
-	"github.com/milkyway-labs/chain-indexer/types"
+	"github.com/milkyway-labs/flux/types"
 )
 
 // Database represents a database used by the indexer to store the indexing state.

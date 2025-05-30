@@ -7,10 +7,10 @@ import (
 
 	"github.com/rs/zerolog"
 
-	cosmostypes "github.com/milkyway-labs/chain-indexer/cosmos/types"
-	"github.com/milkyway-labs/chain-indexer/node"
-	"github.com/milkyway-labs/chain-indexer/rpc/jsonrpc2"
-	"github.com/milkyway-labs/chain-indexer/types"
+	cosmostypes "github.com/milkyway-labs/flux/cosmos/types"
+	"github.com/milkyway-labs/flux/node"
+	"github.com/milkyway-labs/flux/rpc/jsonrpc2"
+	"github.com/milkyway-labs/flux/types"
 )
 
 var _ node.Node = &Node{}

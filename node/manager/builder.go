@@ -3,7 +3,7 @@ package manager
 import (
 	"context"
 
-	"github.com/milkyway-labs/chain-indexer/node"
+	"github.com/milkyway-labs/flux/node"
 )
 
 // Builder represents a function that can be used to build a Node instance,

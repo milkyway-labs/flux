@@ -6,15 +6,15 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/milkyway-labs/chain-indexer/database"
-	"github.com/milkyway-labs/chain-indexer/database/manager"
-	"github.com/milkyway-labs/chain-indexer/indexer"
-	"github.com/milkyway-labs/chain-indexer/modules"
-	modulesmanager "github.com/milkyway-labs/chain-indexer/modules/manager"
-	"github.com/milkyway-labs/chain-indexer/node"
-	nodemanager "github.com/milkyway-labs/chain-indexer/node/manager"
-	"github.com/milkyway-labs/chain-indexer/types"
-	"github.com/milkyway-labs/chain-indexer/utils"
+	"github.com/milkyway-labs/flux/database"
+	"github.com/milkyway-labs/flux/database/manager"
+	"github.com/milkyway-labs/flux/indexer"
+	"github.com/milkyway-labs/flux/modules"
+	modulesmanager "github.com/milkyway-labs/flux/modules/manager"
+	"github.com/milkyway-labs/flux/node"
+	nodemanager "github.com/milkyway-labs/flux/node/manager"
+	"github.com/milkyway-labs/flux/types"
+	"github.com/milkyway-labs/flux/utils"
 )
 
 // IndexersBuilder its an object to create the various indexers with they required
@@ -56,26 +56,26 @@ func (b *IndexersBuilder) BuildAll(ctx context.Context, cfg *types.Config) ([]in
 		indexerCtx := types.NewIndexerContext(cfg, &indexerCfg, logger)
 		ctx = types.InjectIndexerContext(ctx, indexerCtx)
 
-		// Build the database's instance
-		database, err := b.buildDatabase(ctx, cfg, indexerCfg.DatabaseID)
+		// Build the indexer's database instance
+		indexerDB, err := b.buildDatabase(ctx, cfg, indexerCfg.DatabaseID)
 		if err != nil {
 			return nil, fmt.Errorf("build database for indexer %s: %w", indexerCfg.Name, err)
 		}
 
 		// Build the indexer's node
-		node, err := b.buildNode(ctx, cfg, indexerCfg.NodeID)
+		indexerNode, err := b.buildNode(ctx, cfg, indexerCfg.NodeID)
 		if err != nil {
 			return nil, fmt.Errorf("build node for indexer %s: %w", indexerCfg.Name, err)
 		}
 
 		// Build the indexer's modules
-		modules, err := b.buildModules(ctx, cfg, database, node, &indexerCfg)
+		indexerModules, err := b.buildModules(ctx, cfg, indexerDB, indexerNode, &indexerCfg)
 		if err != nil {
 			return nil, fmt.Errorf("build modules for indexer %s: %w", indexerCfg.Name, err)
 		}
 
 		// Build the indexer
-		indexers[i] = indexer.NewIndexer(&indexerCfg, logger, database, node, modules)
+		indexers[i] = indexer.NewIndexer(&indexerCfg, logger, indexerDB, indexerNode, indexerModules)
 	}
 
 	return indexers, nil
@@ -103,26 +103,26 @@ func (b *IndexersBuilder) BuildByName(ctx context.Context, cfg *types.Config, na
 	indexerCtx := types.NewIndexerContext(cfg, indexerCfg, logger)
 	ctx = types.InjectIndexerContext(ctx, indexerCtx)
 
-	// Build the database's instance
-	database, err := b.buildDatabase(ctx, cfg, indexerCfg.DatabaseID)
+	// Build the indexer's database instance
+	indexerDB, err := b.buildDatabase(ctx, cfg, indexerCfg.DatabaseID)
 	if err != nil {
 		return indexer.Indexer{}, fmt.Errorf("build database for indexer %s: %w", indexerCfg.Name, err)
 	}
 
 	// Build the indexer's node
-	node, err := b.buildNode(ctx, cfg, indexerCfg.NodeID)
+	indexerNode, err := b.buildNode(ctx, cfg, indexerCfg.NodeID)
 	if err != nil {
 		return indexer.Indexer{}, fmt.Errorf("build node for indexer %s: %w", indexerCfg.Name, err)
 	}
 
 	// Build the indexer's modules
-	modules, err := b.buildModules(ctx, cfg, database, node, indexerCfg)
+	indexerModules, err := b.buildModules(ctx, cfg, indexerDB, indexerNode, indexerCfg)
 	if err != nil {
 		return indexer.Indexer{}, fmt.Errorf("build modules for indexer %s: %w", indexerCfg.Name, err)
 	}
 
 	// Build the indexer
-	return indexer.NewIndexer(indexerCfg, logger, database, node, modules), nil
+	return indexer.NewIndexer(indexerCfg, logger, indexerDB, indexerNode, indexerModules), nil
 }
 
 func (b *IndexersBuilder) buildDatabase(

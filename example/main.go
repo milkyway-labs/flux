@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/milkyway-labs/chain-indexer/cli"
-	"github.com/milkyway-labs/chain-indexer/cli/types"
-	"github.com/milkyway-labs/chain-indexer/cosmos/node/rpc"
-	"github.com/milkyway-labs/chain-indexer/database/postgresql"
-	"github.com/milkyway-labs/chain-indexer/example/modules"
+	"github.com/milkyway-labs/flux/cli"
+	"github.com/milkyway-labs/flux/cli/types"
+	"github.com/milkyway-labs/flux/cosmos/node/rpc"
+	"github.com/milkyway-labs/flux/database/postgresql"
+	"github.com/milkyway-labs/flux/example/modules"
 )
 
 func main() {

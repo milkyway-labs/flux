@@ -10,8 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/milkyway-labs/chain-indexer/cli/types"
-	"github.com/milkyway-labs/chain-indexer/prometheus"
+	"github.com/milkyway-labs/flux/cli/types"
+	"github.com/milkyway-labs/flux/prometheus"
 )
 
 func NewStartCmd() *cobra.Command {

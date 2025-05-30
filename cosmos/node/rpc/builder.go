@@ -6,15 +6,15 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/milkyway-labs/chain-indexer/node"
-	"github.com/milkyway-labs/chain-indexer/types"
+	"github.com/milkyway-labs/flux/node"
+	"github.com/milkyway-labs/flux/types"
 )
 
 const NodeType = "cosmos-rpc"
 
 func NodeBuilder(
 	ctx context.Context,
-	id string,
+	_ string,
 	rawConfig []byte,
 ) (node.Node, error) {
 	// Parse the configurations

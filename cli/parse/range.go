@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	clitypes "github.com/milkyway-labs/chain-indexer/cli/types"
-	"github.com/milkyway-labs/chain-indexer/indexer"
-	"github.com/milkyway-labs/chain-indexer/types"
+	clitypes "github.com/milkyway-labs/flux/cli/types"
+	"github.com/milkyway-labs/flux/indexer"
+	"github.com/milkyway-labs/flux/types"
 )
 
 func NewParseBlocksRangeCmd() *cobra.Command {
@@ -67,7 +67,10 @@ func parseBlocksRange(
 
 	// Start indexing the requested range
 	wg := sync.WaitGroup{}
-	requestedIndexer.Start(ctx, &wg)
+	err = requestedIndexer.Start(ctx, &wg)
+	if err != nil {
+		return err
+	}
 	wg.Wait()
 
 	return nil

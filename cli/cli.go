@@ -5,19 +5,19 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/milkyway-labs/chain-indexer/cli/parse"
-	"github.com/milkyway-labs/chain-indexer/cli/root"
-	"github.com/milkyway-labs/chain-indexer/cli/start"
-	"github.com/milkyway-labs/chain-indexer/cli/types"
+	"github.com/milkyway-labs/flux/cli/parse"
+	"github.com/milkyway-labs/flux/cli/root"
+	"github.com/milkyway-labs/flux/cli/start"
+	"github.com/milkyway-labs/flux/cli/types"
 )
 
 func NewDefaultIndexerCLI(cliCtx *types.CliContext) *cobra.Command {
 	ctx := context.Background()
-	root := root.NewRootCommad(ctx, cliCtx)
+	rootCmd := root.NewRootCommad(ctx, cliCtx)
 
 	// Add the sub-commands
-	root.AddCommand(start.NewStartCmd())
-	root.AddCommand(parse.NewParseCmd())
+	rootCmd.AddCommand(start.NewStartCmd())
+	rootCmd.AddCommand(parse.NewParseCmd())
 
-	return root
+	return rootCmd
 }

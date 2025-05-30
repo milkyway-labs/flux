@@ -6,9 +6,9 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/milkyway-labs/chain-indexer/node"
-	"github.com/milkyway-labs/chain-indexer/types"
-	"github.com/milkyway-labs/chain-indexer/utils"
+	"github.com/milkyway-labs/flux/node"
+	"github.com/milkyway-labs/flux/types"
+	"github.com/milkyway-labs/flux/utils"
 )
 
 // IndexerHeight represents the height structure used by the

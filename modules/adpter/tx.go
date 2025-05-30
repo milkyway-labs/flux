@@ -3,8 +3,8 @@ package adpter
 import (
 	"context"
 
-	"github.com/milkyway-labs/chain-indexer/modules"
-	"github.com/milkyway-labs/chain-indexer/types"
+	"github.com/milkyway-labs/flux/modules"
+	"github.com/milkyway-labs/flux/types"
 )
 
 type TxHandleModule[B types.Block, T types.Tx] interface {
@@ -32,7 +32,7 @@ func (b *TxHandleAdapter[B, T]) GetName() string {
 	return b.handler.GetName()
 }
 
-// TxHandleModule implements indexer.TxHandleModule.
+// HandleTx implements indexer.TxHandleModule.
 func (b *TxHandleAdapter[B, T]) HandleTx(ctx context.Context, block types.Block, tx types.Tx) error {
 	castedBlock, ok := block.(B)
 	if !ok {

@@ -1,4 +1,4 @@
-module github.com/milkyway-labs/chain-indexer
+module github.com/milkyway-labs/flux
 
 go 1.24.2
 

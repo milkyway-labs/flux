@@ -3,9 +3,9 @@ package manager
 import (
 	"context"
 
-	"github.com/milkyway-labs/chain-indexer/database"
-	"github.com/milkyway-labs/chain-indexer/modules"
-	"github.com/milkyway-labs/chain-indexer/node"
+	"github.com/milkyway-labs/flux/database"
+	"github.com/milkyway-labs/flux/modules"
+	"github.com/milkyway-labs/flux/node"
 )
 
 // Builder represents a function that can be used to build a Module instance,

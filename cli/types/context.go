@@ -8,11 +8,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	database "github.com/milkyway-labs/chain-indexer/database/manager"
-	indexerbuilder "github.com/milkyway-labs/chain-indexer/indexer/builder"
-	modulesmanager "github.com/milkyway-labs/chain-indexer/modules/manager"
-	nodemanager "github.com/milkyway-labs/chain-indexer/node/manager"
-	"github.com/milkyway-labs/chain-indexer/types"
+	database "github.com/milkyway-labs/flux/database/manager"
+	indexerbuilder "github.com/milkyway-labs/flux/indexer/builder"
+	modulesmanager "github.com/milkyway-labs/flux/modules/manager"
+	nodemanager "github.com/milkyway-labs/flux/node/manager"
+	"github.com/milkyway-labs/flux/types"
 )
 
 type CliContextKey string

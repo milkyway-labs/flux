@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/milkyway-labs/chain-indexer/database"
+	"github.com/milkyway-labs/flux/database"
 )
 
 // DatabasesManager handle the construction of the Database instances that can

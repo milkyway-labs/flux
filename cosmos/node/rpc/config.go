@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/milkyway-labs/chain-indexer/types"
+	"github.com/milkyway-labs/flux/types"
 )
 
 type Config struct {

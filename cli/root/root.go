@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/milkyway-labs/chain-indexer/cli/types"
+	"github.com/milkyway-labs/flux/cli/types"
 )
 
 func NewRootCommad(ctx context.Context, cmdContext *types.CliContext) *cobra.Command {
