@@ -10,7 +10,7 @@ You can do that with the following code:
 
 ```go
 import (
-	evmrpc "github.com/milkyway-labs/chain-indexer/evm/node/rpc"
+	evmrpc "github.com/milkyway-labs/flux/evm/node/rpc"
 )
 
 // Register the Cosmos Node in the NodesManager used by the IndexerBuilder
@@ -38,7 +38,7 @@ before considering the request failed. Defaults to `10s`.
 
 To create a `Module` capable of indexing Cosmos-SDK-based blockchains, 
 define a `struct` that implements either the `BlockHandleModule[*evmtypes.Block]` or 
-`BlockHandleModule[*evmtypes.Block, *evmtypes.Tx]` from the `github.com/milkyway-labs/chain-indexer/modules/adapter` package.
+`BlockHandleModule[*evmtypes.Block, *evmtypes.Tx]` from the `github.com/milkyway-labs/flux/modules/adapter` package.
 
 Below is an example of a `BlockHandleModule` that logs transfer actions:
 
@@ -49,12 +49,12 @@ import (
 	"context"
 
 	"github.com/rs/zerolog"
-	"github.com/milkyway-labs/chain-indexer/modules/adapter"
-	evmtypes "github.com/milkyway-labs/chain-indexer/evm/types"
-	"github.com/milkyway-labs/chain-indexer/database"
-	"github.com/milkyway-labs/chain-indexer/modules"
-	"github.com/milkyway-labs/chain-indexer/node"
-	indexertypes "github.com/milkyway-labs/chain-indexer/types"
+	"github.com/milkyway-labs/flux/modules/adapter"
+	evmtypes "github.com/milkyway-labs/flux/evm/types"
+	"github.com/milkyway-labs/flux/database"
+	"github.com/milkyway-labs/flux/modules"
+	"github.com/milkyway-labs/flux/node"
+	indexertypes "github.com/milkyway-labs/flux/types"
 )
 
 var _ adapter.BlockHandleModule[*evmtypes.Block] = &ExampleModule{}
