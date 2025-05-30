@@ -6,8 +6,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/milkyway-labs/chain-indexer/types"
-	"github.com/milkyway-labs/chain-indexer/utils"
+	"github.com/milkyway-labs/flux/types"
+	"github.com/milkyway-labs/flux/utils"
 )
 
 var _ types.Block = &Block{}

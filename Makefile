@@ -76,7 +76,7 @@ test-unit:
 
 test-evm-node:
 	@echo "Executing evm node unit tests..."
-	@go test -mod=readonly $(BUILD_FLAGS) -v -coverprofile coverage.txt github.com/milkyway-labs/chain-indexer/evm/node/rpc
+	@go test -mod=readonly $(BUILD_FLAGS) -v -coverprofile coverage.txt github.com/milkyway-labs/flux/evm/node/rpc
 
 
 .PHONY: test-unit

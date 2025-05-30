@@ -13,26 +13,28 @@ import (
 	indexertypes "github.com/milkyway-labs/flux/types"
 )
 
-var _ adapter.BlockHandleModule[*types.Block] = &ExampleModule{}
+const CosmosExampleModuleName = "cosmos-example"
 
-type ExampleModule struct {
-	logger zerolog.Logger
-}
-
-func ExampleBlockBuilder(ctx context.Context, _ database.Database, _ node.Node, _ []byte) (modules.Module, error) {
+func CosmosExampleBlockBuilder(ctx context.Context, database database.Database, node node.Node, cfg []byte) (modules.Module, error) {
 	indexerCtx := indexertypes.GetIndexerContext(ctx)
-	return adapter.NewBlockHandleAdapter(&ExampleModule{
-		logger: indexerCtx.Logger.With().Str("module", "example").Logger(),
+	return adapter.NewBlockHandleAdapter(&CosmosExampleModule{
+		logger: indexerCtx.Logger.With().Str("module", CosmosExampleModuleName).Logger(),
 	}), nil
 }
 
+var _ adapter.BlockHandleModule[*types.Block] = &CosmosExampleModule{}
+
+type CosmosExampleModule struct {
+	logger zerolog.Logger
+}
+
 // GetName implements modules.BlockHandleModule.
-func (e *ExampleModule) GetName() string {
-	return "example"
+func (e *CosmosExampleModule) GetName() string {
+	return CosmosExampleModuleName
 }
 
 // HandleBlock implements modules.BlockHandleModule.
-func (e *ExampleModule) HandleBlock(_ context.Context, block *types.Block) error {
+func (e *CosmosExampleModule) HandleBlock(_ context.Context, block *types.Block) error {
 	for _, tx := range block.Txs {
 		for _, transferEvent := range tx.Events.FindEventsWithType("transfer") {
 			from, hasFrom := transferEvent.FindAttribute("sender")
@@ -43,7 +45,7 @@ func (e *ExampleModule) HandleBlock(_ context.Context, block *types.Block) error
 					Str("from", from.Value).
 					Str("to", to.Value).
 					Str("amount", amount.Value).
-					Msg("go transfer event")
+					Msg("got transfer event")
 			}
 		}
 	}

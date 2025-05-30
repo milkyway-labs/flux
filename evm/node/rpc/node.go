@@ -13,10 +13,10 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/rs/zerolog"
 
-	evmtypes "github.com/milkyway-labs/chain-indexer/evm/types"
-	"github.com/milkyway-labs/chain-indexer/node"
-	"github.com/milkyway-labs/chain-indexer/rpc/jsonrpc2"
-	"github.com/milkyway-labs/chain-indexer/types"
+	evmtypes "github.com/milkyway-labs/flux/evm/types"
+	"github.com/milkyway-labs/flux/node"
+	"github.com/milkyway-labs/flux/rpc/jsonrpc2"
+	"github.com/milkyway-labs/flux/types"
 )
 
 var _ node.Node = &Node{}

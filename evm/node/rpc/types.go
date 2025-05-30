@@ -3,7 +3,7 @@ package rpc
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	evmtypes "github.com/milkyway-labs/chain-indexer/evm/types"
+	evmtypes "github.com/milkyway-labs/flux/evm/types"
 )
 
 type GetBlockBlockByNumberResponse struct {
