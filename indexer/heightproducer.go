@@ -197,7 +197,7 @@ func (n *NodeHeightProducer) EnqueueHeights(ctx context.Context, queue *Queue[In
 					Msg("got node height lower then current indexer height, maybe the node is behind a load balancer")
 				continue
 			}
-			for height := indexerHeight; height <= currentNodeHeight; height++ {
+			for height := indexerHeight; height < currentNodeHeight; height++ {
 				queue.EnqueueWithContext(ctx, NewIndexerHeight(height))
 			}
 			indexerHeight = currentNodeHeight

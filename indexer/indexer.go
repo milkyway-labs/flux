@@ -130,7 +130,7 @@ func (i *Indexer) buildDefaultHeightProducer(ctx context.Context) (HeightProduce
 	}
 
 	// Get the blocks that are missing and we need to index
-	missingBlocks, err := i.db.GetMissingBlocks(i.node.GetChainID(), missingBlockStartHeight, currentNodeHeigh)
+	missingBlocks, err := i.db.GetMissingBlocks(i.node.GetChainID(), missingBlockStartHeight, currentNodeHeigh-1)
 	if err != nil {
 		return nil, fmt.Errorf("get missing blocks: %w", err)
 	}
