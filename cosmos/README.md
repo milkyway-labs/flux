@@ -10,7 +10,7 @@ You can do that with the following code:
 
 ```go
 import (
-	cosmosrpc "github.com/milkyway-labs/chain-indexer/cosmos/node/rpc"
+	cosmosrpc "github.com/milkyway-labs/flux/cosmos/node/rpc"
 )
 
 // Register the Cosmos Node in the NodesManager used by the IndexerBuilder
@@ -42,7 +42,7 @@ treated as base64-encoded and need to be decoded. If this field is undefined, bl
 ## Cosmos Modules
 
 To create a `Module` capable of indexing Cosmos-SDK-based blockchains, 
-define a `struct` that implements either the `BlockHandleModule` or `TxHandleModule` from the `github.com/milkyway-labs/chain-indexer/cosmos/modules` package.
+define a `struct` that implements either the `BlockHandleModule` or `TxHandleModule` from the `github.com/milkyway-labs/flux/cosmos/modules` package.
 
 Below is an example of a `BlockHandleModule` that logs transfer actions:
 
@@ -53,12 +53,12 @@ import (
 	"context"
 
 	"github.com/rs/zerolog"
-	cosmosmodules "github.com/milkyway-labs/chain-indexer/cosmos/modules"
-	"github.com/milkyway-labs/chain-indexer/cosmos/types"
-	"github.com/milkyway-labs/chain-indexer/database"
-	"github.com/milkyway-labs/chain-indexer/modules"
-	"github.com/milkyway-labs/chain-indexer/node"
-	indexertypes "github.com/milkyway-labs/chain-indexer/types"
+	cosmosmodules "github.com/milkyway-labs/flux/cosmos/modules"
+	"github.com/milkyway-labs/flux/cosmos/types"
+	"github.com/milkyway-labs/flux/database"
+	"github.com/milkyway-labs/flux/modules"
+	"github.com/milkyway-labs/flux/node"
+	indexertypes "github.com/milkyway-labs/flux/types"
 )
 
 var _ cosmosmodules.BlockHandleModule = &ExampleModule{}
@@ -114,10 +114,10 @@ Below is an example that shows how to use the `BlockHandleAdapter` to register a
 import (
 	"context"
 
-	cosmosmodules "github.com/milkyway-labs/chain-indexer/cosmos/modules"
-	"github.com/milkyway-labs/chain-indexer/database"
-	"github.com/milkyway-labs/chain-indexer/node"
-	indexertypes "github.com/milkyway-labs/chain-indexer/types"
+	cosmosmodules "github.com/milkyway-labs/flux/cosmos/modules"
+	"github.com/milkyway-labs/flux/database"
+	"github.com/milkyway-labs/flux/node"
+	indexertypes "github.com/milkyway-labs/flux/types"
 )
 
 func ExampleBlockBuilder(ctx context.Context, database database.Database, node node.Node, cfg []byte) (modules.Module, error) {

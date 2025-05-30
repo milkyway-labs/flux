@@ -9,7 +9,7 @@ To register this database type, use the following code:
 
 ```go
 import (
-	"github.com/milkyway-labs/chain-indexer/database/postgresql"
+	"github.com/milkyway-labs/flux/database/postgresql"
 )
 
 // Register the PostgreSQL driver with the DatabaseManager used by the IndexerBuilder
