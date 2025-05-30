@@ -42,10 +42,11 @@ func (e *EVMExampleModule) HandleBlock(ctx context.Context, block *evmtypes.Bloc
 		topic := log.Topics[0].Hex()
 		if topic == ERC20TransferTopic && len(log.Topics) == 3 {
 			e.logger.Info().
-				Str("from", log.Topics[1].Hex()).
-				Str("to", log.Topics[2].Hex()).
-				Str("amount", log.Data.String()).
-				Msg("got transfer event")
+				Str("address", log.Address.NormalizedHex()).
+				Str("from", log.Topics[1].NormalizedHex()).
+				Str("to", log.Topics[2].NormalizedHex()).
+				Str("amount", log.Data.Int().String()).
+				Msg("ERC20 transfer event")
 		}
 	}
 
