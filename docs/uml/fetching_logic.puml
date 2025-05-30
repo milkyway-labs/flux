@@ -1,0 +1,71 @@
+@startuml
+participant Indexer
+participant "observeProducedBlocksLoop" as Monitor
+participant Node
+participant HeightsQueue
+participant "indexingLoop" as Worker
+participant Database
+participant BlockHandleModule as BHM
+participant TxHandleModule as THM
+
+Indexer -> Monitor: Start monitoring (spawn)
+activate Monitor
+
+loop Every interval
+    Monitor -> Node: GetCurrentHeight()
+    activate Node
+    Node --> Monitor: currentHeight
+    deactivate Node
+    
+    Note over Monitor: Compute missing blocks\n(startHeight to currentHeight)
+    
+    Monitor -> HeightsQueue: Enqueue(missingHeights)
+end
+
+par Workers
+    loop For each worker
+        HeightsQueue -> Worker: Dequeue(indexHeight)
+        activate Worker
+        
+        Worker -> Node: GetBlock(indexHeight.Height)
+        activate Node
+        alt Block fetched successfully
+            Node --> Worker: block
+            deactivate Node
+            
+            group Process block with modules
+                loop For each module
+                    alt is BlockHandleModule
+                        Worker -> BHM: HandleBlock(block)
+                    end
+                    alt is TxHandleModule
+                        loop for each tx in block.GetTxs()
+                            Worker -> THM: HandleTx(block, tx)
+                        end
+                    end
+                end
+            end
+            
+            Worker -> Database: SaveIndexedBlock(block.GetChainID(),\nblock.GetHeight(),\nblock.GetTimeStamp())
+            activate Database
+            Database --> Worker: ok
+            deactivate Database
+        else Error occurs
+            Node --> Worker: error
+            deactivate Node
+            
+            group Re-enqueue logic
+                Worker -> Worker: indexHeight.Attempts += 1
+                alt indexHeight.Attempts < MaxAttempts
+                    Note over Worker: Add retry delay
+                    Worker -> HeightsQueue: DelayedEnqueue(indexHeight)
+                else
+                    Worker --> Worker: Log "Max attempts reached"
+                end
+            end
+        end
+        
+        deactivate Worker
+    end
+end
+@enduml
