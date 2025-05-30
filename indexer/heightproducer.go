@@ -172,9 +172,9 @@ func (n *NodeHeightProducer) EnqueueHeights(ctx context.Context, queue *Queue[In
 		n.logger.Info().Msg("stopping node monitoring loop")
 	}()
 
-	indexerHeight := n.from
+	toFetchHeight := n.from
 	n.logger.Info().
-		Uint64("start height", uint64(indexerHeight)).
+		Uint64("start height", uint64(toFetchHeight)).
 		Msg("start node monitoring loop")
 	for {
 		select {
@@ -190,17 +190,14 @@ func (n *NodeHeightProducer) EnqueueHeights(ctx context.Context, queue *Queue[In
 				n.logger.Err(err).Msg("get current node height")
 				continue
 			}
-			if currentNodeHeight < indexerHeight {
-				n.logger.Warn().
-					Uint64("current", uint64(currentNodeHeight)).
-					Uint64("indexer", uint64(indexerHeight)).
-					Msg("got node height lower then current indexer height, maybe the node is behind a load balancer")
+			// Prevent enqueue of an already indexed block
+			if toFetchHeight > currentNodeHeight {
 				continue
 			}
-			for height := indexerHeight; height < currentNodeHeight; height++ {
-				queue.EnqueueWithContext(ctx, NewIndexerHeight(height))
+			for ; toFetchHeight <= currentNodeHeight; toFetchHeight++ {
+				queue.EnqueueWithContext(ctx, NewIndexerHeight(toFetchHeight))
 			}
-			indexerHeight = currentNodeHeight
+			// After the loop, toFetchHeight is currentNodeHeight + 1 now
 		}
 	}
 }
