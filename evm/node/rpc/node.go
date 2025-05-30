@@ -3,20 +3,18 @@ package rpc
 import (
 	"context"
 	"fmt"
-	"maps"
+	"math/big"
 	"net/http"
-	"slices"
-	"strconv"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/ethclient"
+	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/rs/zerolog"
 
 	evmtypes "github.com/milkyway-labs/flux/evm/types"
 	"github.com/milkyway-labs/flux/node"
-	"github.com/milkyway-labs/flux/rpc/jsonrpc2"
 	"github.com/milkyway-labs/flux/types"
+	"github.com/milkyway-labs/flux/utils"
 )
 
 var _ node.Node = &Node{}
@@ -24,70 +22,74 @@ var _ node.Node = &Node{}
 // Node represents a node instance capable of fetching data from an EVM node
 // trough JSON-RPC calls.
 type Node struct {
-	cfg     Config
-	logger  zerolog.Logger
-	client  *jsonrpc2.Client
-	chainID string
+	cfg       Config
+	logger    zerolog.Logger
+	chainID   string
+	ethClient *ethclient.Client
 }
 
 func NewNode(ctx context.Context, logger zerolog.Logger, cfg Config) (*Node, error) {
-	jsonRPCClient, err := jsonrpc2.NewClient(cfg.URL, &http.Client{
+	rpcClient, err := ethrpc.DialOptions(ctx, cfg.URL, ethrpc.WithHTTPClient(&http.Client{
 		Timeout: cfg.RequestTimeout,
-	})
+	}))
 	if err != nil {
 		return nil, fmt.Errorf("create rpc client: %w", err)
 	}
+	client := ethclient.NewClient(rpcClient)
 
-	var chainIDHex string
-	if err := jsonRPCClient.Call(ctx, "eth_chainId", []string{}, &chainIDHex); err != nil {
-		return nil, fmt.Errorf("get chain id: %w", err)
+	// Fetch the chain ID
+	chainID, err := client.ChainID(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get chain id")
 	}
+	chainIDHex := fmt.Sprintf("0x%x", chainID)
 
 	return &Node{
-		cfg:     cfg,
-		logger:  logger.With().Str(NodeType, cfg.URL).Logger(),
-		client:  jsonRPCClient,
-		chainID: chainIDHex,
+		cfg:       cfg,
+		logger:    logger.With().Str(NodeType, cfg.URL).Logger(),
+		ethClient: client,
+		chainID:   chainIDHex,
 	}, nil
 }
 
 // GetBlock implements node.Node.
 func (n *Node) GetBlock(ctx context.Context, height types.Height) (types.Block, error) {
-	ethBlock, err := n.GetEthBlock(ctx, height)
+	// Get the block header
+	ethBlock, err := n.ethClient.HeaderByNumber(ctx, bigHeigt(height))
 	if err != nil {
-		return nil, fmt.Errorf("get eth block failed: %w", err)
+		return nil, fmt.Errorf("get eth block header: %w", err)
 	}
 
-	// Fetch the log for this block
-	logs, err := n.GetLogs(ctx, height)
+	// Get the block receipts
+	blockNumber := ethrpc.BlockNumber(int64(height))
+	receipts, err := n.ethClient.BlockReceipts(ctx, ethrpc.BlockNumberOrHash{
+		BlockNumber: &blockNumber,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("get eth logs")
+		return nil, fmt.Errorf("get block receipts: %w", err)
 	}
 
-	// Create the Tx objects from the logs result
-	txs := make(map[common.Hash]evmtypes.Tx)
-	for _, logEntry := range logs {
-		tx, ok := txs[logEntry.TransactionHash]
-		// Create a new Tx object
-		if !ok {
-			tx = evmtypes.NewTx(logEntry.TransactionHash.Hex())
-		}
-		// Add the relevant log entry to the tx logs
-		tx.Logs = append(tx.Logs, logEntry)
+	// Create the Tx objects from the block receipts
+	txs := make([]*evmtypes.Tx, len(receipts))
+	var logs evmtypes.Logs
+	for i, r := range receipts {
+		// Convert the logs to our format
+		txLogs := utils.Map(r.Logs, LogFromEthlog)
+		// Flatten the logs to have them all also in the block
+		logs = append(logs, txLogs...)
 
-		txs[logEntry.TransactionHash] = tx
+		// Create the transaction instance
+		txs[i] = TxFromReceipt(r).
+			WithLogs(logs)
 	}
 
 	// Create the block
-	block := evmtypes.NewBlock(
+	return evmtypes.NewBlock(
 		n.chainID,
 		height,
-		time.Unix(int64(ethBlock.Timestamp), 0),
-		evmtypes.Logs(logs),
-		slices.Collect(maps.Values(txs)),
-	)
-
-	return &block, nil
+		time.Unix(int64(ethBlock.Time), 0),
+		txs,
+	).WithLogs(logs), nil
 }
 
 // GetChainID implements node.Node.
@@ -97,24 +99,14 @@ func (n *Node) GetChainID() string {
 
 // GetCurrentHeight implements node.Node.
 func (n *Node) GetCurrentHeight(ctx context.Context) (types.Height, error) {
-	var blockNumberHex string
-	if err := n.client.Call(ctx, "eth_blockNumber", []string{}, &blockNumberHex); err != nil {
-		return 0, fmt.Errorf("get current height: %w", err)
-	}
-
-	// Remove the 0x prefix and parse as hex number
-	height, err := strconv.ParseUint(blockNumberHex[2:], 16, 64)
-	if err != nil {
-		return 0, fmt.Errorf("parse hex height: %w", err)
-	}
-
-	return types.Height(height), nil
+	height, err := n.ethClient.BlockNumber(ctx)
+	return types.Height(height), err
 }
 
 // GetLowestHeight implements node.Node.
 func (n *Node) GetLowestHeight(ctx context.Context) (types.Height, error) {
 	// Try to get the first block
-	_, err := n.GetEthBlock(ctx, 0)
+	_, err := n.ethClient.HeaderByNumber(ctx, big.NewInt(0))
 	if err == nil {
 		return 0, nil
 	}
@@ -132,7 +124,7 @@ func (n *Node) GetLowestHeight(ctx context.Context) (types.Height, error) {
 
 	for low <= high {
 		mid := (low + high) / 2
-		if _, err := n.GetEthBlock(ctx, mid); err == nil {
+		if _, err := n.ethClient.HeaderByNumber(ctx, bigHeigt(mid)); err == nil {
 			lowestAvailable = mid
 			high = mid - 1
 		} else {
@@ -143,25 +135,6 @@ func (n *Node) GetLowestHeight(ctx context.Context) (types.Height, error) {
 	return lowestAvailable, nil
 }
 
-// Performs a "eth_getBlockByNumber" with the provided height.
-func (n *Node) GetEthBlock(ctx context.Context, height types.Height) (GetBlockBlockByNumberResponse, error) {
-	var response GetBlockBlockByNumberResponse
-	if err := n.client.Call(ctx, "eth_getBlockByNumber", []any{hexutil.Uint64(height), false}, &response); err != nil {
-		return GetBlockBlockByNumberResponse{}, fmt.Errorf("get current height: %w", err)
-	}
-
-	return response, nil
-}
-
-// Performs a "eth_getLogs" with the provided height.
-func (n *Node) GetLogs(ctx context.Context, height types.Height) (GetLogsResponse, error) {
-	var response GetLogsResponse
-	if err := n.client.Call(ctx, "eth_getLogs", []any{GetLogsRequest{
-		FromBlock: hexutil.Uint64(height),
-		ToBlock:   hexutil.Uint64(height),
-	}}, &response); err != nil {
-		return nil, fmt.Errorf("get logs: %w", err)
-	}
-
-	return response, nil
+func bigHeigt(h types.Height) *big.Int {
+	return new(big.Int).SetUint64(uint64(h))
 }
