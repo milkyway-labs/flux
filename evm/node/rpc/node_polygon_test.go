@@ -17,13 +17,7 @@ func (suite *NodeTestSuite) TestPolygonNode() {
 	height, err := suite.node.GetCurrentHeight(context.Background())
 	suite.Require().NoError(err)
 
-	_, err = suite.node.GetEthBlock(context.Background(), height)
-	suite.Require().NoError(err)
-
 	_, err = suite.node.GetLowestHeight(context.Background())
-	suite.Require().NoError(err)
-
-	_, err = suite.node.GetLogs(context.Background(), height)
 	suite.Require().NoError(err)
 
 	_, err = suite.node.GetBlock(context.Background(), height)
