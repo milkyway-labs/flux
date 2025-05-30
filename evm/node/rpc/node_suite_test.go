@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
 
-	evmrpc "github.com/milkyway-labs/chain-indexer/evm/node/rpc"
+	evmrpc "github.com/milkyway-labs/flux/evm/node/rpc"
 )
 
 func TestDatabaseTestSuite(t *testing.T) {

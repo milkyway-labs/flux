@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/milkyway-labs/chain-indexer/evm/node/rpc"
+	"github.com/milkyway-labs/flux/evm/node/rpc"
 )
 
 func (suite *NodeTestSuite) TestPolygonNode() {
