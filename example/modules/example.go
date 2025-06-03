@@ -8,12 +8,12 @@ import (
 	"github.com/milkyway-labs/flux/cosmos/types"
 	"github.com/milkyway-labs/flux/database"
 	"github.com/milkyway-labs/flux/modules"
-	"github.com/milkyway-labs/flux/modules/adpter"
+	"github.com/milkyway-labs/flux/modules/adapter"
 	"github.com/milkyway-labs/flux/node"
 	indexertypes "github.com/milkyway-labs/flux/types"
 )
 
-var _ adpter.BlockHandleModule[*types.Block] = &ExampleModule{}
+var _ adapter.BlockHandleModule[*types.Block] = &ExampleModule{}
 
 type ExampleModule struct {
 	logger zerolog.Logger
@@ -21,7 +21,7 @@ type ExampleModule struct {
 
 func ExampleBlockBuilder(ctx context.Context, _ database.Database, _ node.Node, _ []byte) (modules.Module, error) {
 	indexerCtx := indexertypes.GetIndexerContext(ctx)
-	return adpter.NewBlockHandleAdapter[*types.Block](&ExampleModule{
+	return adapter.NewBlockHandleAdapter(&ExampleModule{
 		logger: indexerCtx.Logger.With().Str("module", "example").Logger(),
 	}), nil
 }
