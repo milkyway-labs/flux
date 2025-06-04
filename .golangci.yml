@@ -24,6 +24,7 @@ linters:
     - unconvert
     - unused
     - unparam
+    - gci
 
 issues:
   max-issues-per-linter: 10000
@@ -38,11 +39,20 @@ issues:
 
 linters-settings:
   goimports:
-    local-prefixes: gitlab.com/milkyway-labs/apis
+    local-prefixes: gitlab.com/milkyway-labs/flux
   dogsled:
     max-blank-identifiers: 3
   nolintlint:
     allow-unused: false
     require-explanation: false
     require-specific: false
+  gci:
+    skip-generated: true
+    sections:
+      - Standard
+      - Default
+      - Prefix(github.com/milkyway-labs)
+      - Prefix(gitlab.com/milkyway-labs/flux)
+    custom-order: true
+    no-inline-comment: true
 
