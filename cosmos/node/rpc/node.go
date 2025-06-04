@@ -6,7 +6,9 @@ import (
 	"net/http"
 
 	"github.com/rs/zerolog"
+	"google.golang.org/grpc/encoding"
 
+	"github.com/milkyway-labs/flux/cosmos/node/rpc/grpc"
 	cosmostypes "github.com/milkyway-labs/flux/cosmos/types"
 	"github.com/milkyway-labs/flux/node"
 	"github.com/milkyway-labs/flux/rpc/jsonrpc2"
@@ -162,4 +164,15 @@ func (r *Node) GetBlock(ctx context.Context, height types.Height) (types.Block, 
 		blockResultsResponse.EndBlockEvents,
 		blockResultsResponse.FinalizeBlockEvents,
 	), nil
+}
+
+// Config gets the Node configuration.
+func (r *Node) Config() Config {
+	return r.cfg
+}
+
+// NewGRPCOverRPC creates a new gRPC over RPC connection that can be used to
+// interact with the chain.
+func (r *Node) NewGRPCOverRPC(codec encoding.Codec) *grpc.GRPCOverRPC {
+	return grpc.NewGRPCOverRPC(r.client, codec)
 }
