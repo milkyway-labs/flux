@@ -95,19 +95,19 @@ func (w *Worker) fetchAndProcessBlock(ctx context.Context, height types.Height) 
 	// Get the block from the node
 	block, err := w.node.GetBlock(ctx, height)
 	if err != nil {
-		return fmt.Errorf("fetch block %d, %w", height, err)
+		return fmt.Errorf("fetch block: %d, err: %w", height, err)
 	}
 
 	// Process the fetched block
 	err = w.processBlock(w.log, ctx, block)
 	if err != nil {
-		return fmt.Errorf("process block %d", height)
+		return fmt.Errorf("process block: %d, err: %w", height, err)
 	}
 
 	// Save in the database that we have successfully indexed the block
 	err = w.db.SaveIndexedBlock(w.node.GetChainID(), height, block.GetTimeStamp())
 	if err != nil {
-		return fmt.Errorf("save block %d as indexed", height)
+		return fmt.Errorf("save block %d as indexed: %w", height, err)
 	}
 
 	w.log.Debug().Uint64("height", uint64(height)).Msg("block indexed")
