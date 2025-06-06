@@ -4,6 +4,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 -->
 
 
+## Version 1.2.1
+
+### Features
+- Add a hook to execute custom logic before the CLI start command executes
+- Add a hook to execute custom logic after the configuration file have been read
+- Allow objects to be shared across all modules
+
+### Bug Fixes
+- Fix missing hash in cosmos transactions
+
 ## Version 1.1.0
 
 ### Features
