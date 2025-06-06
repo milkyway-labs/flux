@@ -27,6 +27,8 @@ type CliContext struct {
 	NodesManager     *nodemanager.NodesManager
 	ModulesManager   *modulesmanager.ModulesManager
 	IndexersBuilder  *indexerbuilder.IndexersBuilder
+	// Function that is called before the start cmd is executed.
+	BeforeStartHook BeforeStartHook
 }
 
 func NewCliContext(
@@ -77,6 +79,11 @@ func (c *CliContext) LoadConfig() (*types.Config, error) {
 		return nil, err
 	}
 	return config, nil
+}
+
+func (c *CliContext) WithBeforeStartHook(hook BeforeStartHook) *CliContext {
+	c.BeforeStartHook = hook
+	return c
 }
 
 func InjectCliContext(ctx context.Context, cliCtx *CliContext) context.Context {

@@ -20,6 +20,12 @@ func NewStartCmd() *cobra.Command {
 		Short: "Start parsing the blockchain data",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := types.GetCliContext(cmd)
+			if ctx.BeforeStartHook != nil {
+				err := ctx.BeforeStartHook(cmd, ctx)
+				if err != nil {
+					return fmt.Errorf("before start hook: %w", err)
+				}
+			}
 			return startParsing(cmd.Context(), ctx)
 		},
 	}
