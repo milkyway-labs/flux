@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -35,14 +34,9 @@ var DefaultConfig = Config{
 	Monitoring: DefaultMonitoringCfg,
 }
 
-func ParseConfig(configPath string) (*Config, error) {
-	configData, err := os.ReadFile(configPath)
-	if err != nil {
-		return nil, fmt.Errorf("read config: %w", err)
-	}
-
+func ParseConfig(configBytes []byte) (*Config, error) {
 	config := Config{}
-	err = yaml.Unmarshal(configData, &config)
+	err := yaml.Unmarshal(configBytes, &config)
 	if err != nil {
 		return nil, fmt.Errorf("parse config: %w", err)
 	}

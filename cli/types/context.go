@@ -29,6 +29,9 @@ type CliContext struct {
 	IndexersBuilder  *indexerbuilder.IndexersBuilder
 	// Function that is called before the start cmd is executed.
 	BeforeStartHook BeforeStartHook
+	// Function that is called after the configurations have been loaded from the
+	// disk.
+	RawConfigLoadedHook RawConfigLoadedHook
 }
 
 func NewCliContext(
@@ -65,7 +68,7 @@ func (c *CliContext) GetConfigFilePath() string {
 	return path.Join(c.CfgDir, "config.yaml")
 }
 
-func (c *CliContext) LoadConfig() (*types.Config, error) {
+func (c *CliContext) LoadConfigFileContent() ([]byte, error) {
 	configFilePath := c.GetConfigFilePath()
 
 	// Make sure the path exists
@@ -73,8 +76,31 @@ func (c *CliContext) LoadConfig() (*types.Config, error) {
 		return nil, fmt.Errorf("config file does not exist (%s)", configFilePath)
 	}
 
-	// Read the config
-	config, err := types.ParseConfig(configFilePath)
+	// Read the file content
+	configData, err := os.ReadFile(configFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("read config: %w", err)
+	}
+
+	if c.RawConfigLoadedHook != nil {
+		err := c.RawConfigLoadedHook(c, configData)
+		if err != nil {
+			return nil, fmt.Errorf("raw configuration loaded hook: %w", err)
+		}
+	}
+
+	return configData, nil
+}
+
+func (c *CliContext) LoadConfig() (*types.Config, error) {
+	// Read the config file
+	configFileContent, err := c.LoadConfigFileContent()
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse the config
+	config, err := types.ParseConfig(configFileContent)
 	if err != nil {
 		return nil, err
 	}
@@ -83,6 +109,11 @@ func (c *CliContext) LoadConfig() (*types.Config, error) {
 
 func (c *CliContext) WithBeforeStartHook(hook BeforeStartHook) *CliContext {
 	c.BeforeStartHook = hook
+	return c
+}
+
+func (c *CliContext) WithRawConfigLoadedHook(hook RawConfigLoadedHook) *CliContext {
+	c.RawConfigLoadedHook = hook
 	return c
 }
 
