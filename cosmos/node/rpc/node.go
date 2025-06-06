@@ -18,10 +18,11 @@ import (
 var _ node.Node = &Node{}
 
 type Node struct {
-	cfg     Config
-	logger  zerolog.Logger
-	client  *jsonrpc2.Client
-	chainID string
+	cfg      Config
+	logger   zerolog.Logger
+	client   *jsonrpc2.Client
+	chainID  string
+	txHasher TxHasher
 }
 
 func NewNode(ctx context.Context, logger zerolog.Logger, cfg Config) (*Node, error) {
@@ -38,10 +39,11 @@ func NewNode(ctx context.Context, logger zerolog.Logger, cfg Config) (*Node, err
 	}
 
 	return &Node{
-		cfg:     cfg,
-		logger:  logger.With().Str("cosmos-node", cfg.URL).Logger(),
-		client:  jsonRPCClient,
-		chainID: res.NodeInfo.Network,
+		cfg:      cfg,
+		logger:   logger.With().Str("cosmos-node", cfg.URL).Logger(),
+		client:   jsonRPCClient,
+		chainID:  res.NodeInfo.Network,
+		txHasher: DefaultTxHasher,
 	}, nil
 }
 
@@ -100,10 +102,12 @@ func (r *Node) GetBlock(ctx context.Context, height types.Height) (types.Block, 
 			txEvents = txResult.Events
 		}
 
+		hash := r.txHasher(blockResponse.Block.Txs[txIndex].Bytes())
+		hexHash := fmt.Sprintf("%X", hash)
 		txs[txIndex] = cosmostypes.NewTx(
 			txResult.Code,
 			txResult.Data,
-			txResult.TxHash,
+			hexHash,
 			txEvents,
 			txResult.Log,
 		)
@@ -175,4 +179,15 @@ func (r *Node) Config() Config {
 // interact with the chain.
 func (r *Node) NewGRPCOverRPC(codec encoding.Codec) *grpc.GRPCOverRPC {
 	return grpc.NewGRPCOverRPC(r.client, codec)
+}
+
+// WithCustomTxHasher modifies how the node calculates the hash of a transaction included in a block.
+// If no `txHasher` is provided, the default hash function is used.
+func (r *Node) WithCustomTxHasher(txHasher TxHasher) *Node {
+	if txHasher == nil {
+		txHasher = DefaultTxHasher
+	}
+	r.txHasher = txHasher
+
+	return r
 }

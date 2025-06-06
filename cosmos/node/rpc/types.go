@@ -39,8 +39,13 @@ type BlockHeader struct {
 	Time    time.Time    `json:"time"`
 }
 
+type BlockData struct {
+	Txs []types.Base64Bytes `json:"txs"`
+}
+
 type Block struct {
 	BlockHeader `json:"header"`
+	BlockData   `json:"data"`
 }
 
 type BlockResultsRequest struct {
@@ -57,8 +62,7 @@ type BlockResultsResponse struct {
 
 type ResponseDeliverTx struct {
 	Code      uint32                 `json:"code"`
-	Data      []byte                 `json:"data"`
-	TxHash    string                 `json:"txhash"`
+	Data      types.Base64Bytes      `json:"data"`
 	Log       string                 `json:"log"`
 	GasWanted int64                  `json:"gas_wanted,string"`
 	GasUsed   int64                  `json:"gas_used,string"`
