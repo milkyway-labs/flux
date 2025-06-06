@@ -14,14 +14,24 @@ type IndexerContext struct {
 	Config        *Config
 	IndexerConfig *IndexerConfig
 	Logger        zerolog.Logger
+	globalObjecst map[string]any
 }
 
-func NewIndexerContext(cfg *Config, indexerCfg *IndexerConfig, logger zerolog.Logger) IndexerContext {
+func NewIndexerContext(
+	cfg *Config,
+	indexerCfg *IndexerConfig,
+	globalObjects map[string]any,
+	logger zerolog.Logger,
+) IndexerContext {
 	return IndexerContext{
 		Config:        cfg,
 		IndexerConfig: indexerCfg,
 		Logger:        logger.With().Str("indexer", indexerCfg.Name).Logger(),
 	}
+}
+
+func (i *IndexerContext) GetGlobalObject(key string) any {
+	return i.globalObjecst[key]
 }
 
 func InjectIndexerContext(ctx context.Context, indexerCtx IndexerContext) context.Context {

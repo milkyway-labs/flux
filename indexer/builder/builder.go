@@ -23,6 +23,7 @@ type IndexersBuilder struct {
 	databasesManager *manager.DatabasesManager
 	nodesManager     *nodemanager.NodesManager
 	modulesManager   *modulesmanager.ModulesManager
+	globalObjects    map[string]any
 }
 
 func NewIndexersBuilder(
@@ -53,7 +54,7 @@ func (b *IndexersBuilder) BuildAll(ctx context.Context, cfg *types.Config) ([]in
 
 	indexers := make([]indexer.Indexer, len(cfg.Indexers))
 	for i, indexerCfg := range cfg.Indexers {
-		indexerCtx := types.NewIndexerContext(cfg, &indexerCfg, logger)
+		indexerCtx := types.NewIndexerContext(cfg, &indexerCfg, b.globalObjects, logger)
 		ctx = types.InjectIndexerContext(ctx, indexerCtx)
 
 		// Build the indexer's database instance
@@ -100,7 +101,7 @@ func (b *IndexersBuilder) BuildByName(ctx context.Context, cfg *types.Config, na
 		return indexer.Indexer{}, err
 	}
 
-	indexerCtx := types.NewIndexerContext(cfg, indexerCfg, logger)
+	indexerCtx := types.NewIndexerContext(cfg, indexerCfg, b.globalObjects, logger)
 	ctx = types.InjectIndexerContext(ctx, indexerCtx)
 
 	// Build the indexer's database instance
@@ -123,6 +124,19 @@ func (b *IndexersBuilder) BuildByName(ctx context.Context, cfg *types.Config, na
 
 	// Build the indexer
 	return indexer.NewIndexer(indexerCfg, logger, indexerDB, indexerNode, indexerModules), nil
+}
+
+// WithGlobalObject adds an object that can be accessed from all the modules
+// during their initialization. This can be useful in case you want to share some
+// global objects across all the modules.
+func (b *IndexersBuilder) WithGlobalObject(key string, value any) *IndexersBuilder {
+	b.globalObjects[key] = value
+	return b
+}
+
+// GetGlobalObject gets one of the global objects given its key.
+func (b *IndexersBuilder) GetGlobalObject(key string) any {
+	return b.globalObjects[key]
 }
 
 func (b *IndexersBuilder) buildDatabase(
