@@ -27,6 +27,7 @@ func NewIndexerContext(
 		Config:        cfg,
 		IndexerConfig: indexerCfg,
 		Logger:        logger.With().Str("indexer", indexerCfg.Name).Logger(),
+		globalObjecst: globalObjects,
 	}
 }
 

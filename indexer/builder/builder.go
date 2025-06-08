@@ -35,6 +35,7 @@ func NewIndexersBuilder(
 		databasesManager: databasesManager,
 		nodesManager:     nodesManager,
 		modulesManager:   modulesManager,
+		globalObjects:    make(map[string]any),
 	}
 }
 
