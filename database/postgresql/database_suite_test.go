@@ -11,14 +11,17 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/milkyway-labs/flux/database/postgresql"
+	dbsuite "github.com/milkyway-labs/flux/database/suite"
 )
 
 func TestDatabaseTestSuite(t *testing.T) {
-	suite.Run(t, new(DbTestSuite))
+	testSuite := new(DbTestSuite)
+	testSuite.WithBeforeTestHook(testSuite.SetupTest)
+	suite.Run(t, testSuite)
 }
 
 type DbTestSuite struct {
-	suite.Suite
+	dbsuite.Suite
 
 	database *postgresql.Database
 }
@@ -80,4 +83,5 @@ $$ LANGUAGE plpgsql;`, "public")
 	suite.Require().NoError(err)
 
 	suite.database = parserDb
+	suite.InitDB(parserDb)
 }

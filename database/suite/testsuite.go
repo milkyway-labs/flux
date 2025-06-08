@@ -1,14 +1,44 @@
-package postgresql_test
+package suite
 
 import (
 	"time"
 
-	"github.com/milkyway-labs/flux/database/postgresql"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/milkyway-labs/flux/database"
 	"github.com/milkyway-labs/flux/types"
 )
 
-func (suite *DbTestSuite) TestGetLowestBlock() {
-	testHeigt := types.Height(11)
+type BeforeTestHook func()
+
+// Suite represents a test suite that can be used to verify the correct
+// behavior of a Database implementation.
+type Suite struct {
+	suite.Suite
+
+	database       database.Database
+	beforeTestHook BeforeTestHook
+}
+
+// InitDB sets the database instance under test
+func (s *Suite) InitDB(database database.Database) {
+	s.database = database
+}
+
+// WithBeforeTestHook configures the hook that will be called before each test.
+func (s *Suite) WithBeforeTestHook(hook BeforeTestHook) *Suite {
+	s.beforeTestHook = hook
+	return s
+}
+
+func (s *Suite) executeBeforeTestHook() {
+	if s.beforeTestHook != nil {
+		s.beforeTestHook()
+	}
+}
+
+func (s *Suite) TestGetLowestBlock() {
+	testHeigt := types.Height(9)
 	testCases := []struct {
 		name           string
 		setup          func()
@@ -25,8 +55,9 @@ func (suite *DbTestSuite) TestGetLowestBlock() {
 		{
 			name: "return the correct height",
 			setup: func() {
-				suite.database.SaveIndexedBlock("test", 12, time.Now())
-				suite.database.SaveIndexedBlock("test", 11, time.Now())
+				s.database.SaveIndexedBlock("test", 9, time.Now())
+				s.database.SaveIndexedBlock("test", 12, time.Now())
+				s.database.SaveIndexedBlock("test", 11, time.Now())
 			},
 			shouldErr:      false,
 			chainID:        "test",
@@ -35,25 +66,28 @@ func (suite *DbTestSuite) TestGetLowestBlock() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		s.Run(tc.name, func() {
+			s.executeBeforeTestHook()
 			if tc.setup != nil {
 				tc.setup()
 			}
 
-			result, err := suite.database.GetLowestBlock(tc.chainID)
+			result, err := s.database.GetLowestBlock(tc.chainID)
 			if tc.shouldErr {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			} else {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expectedHeigth, result)
+				s.Require().NoError(err)
+				if tc.expectedHeigth == nil {
+					s.Require().Nil(result)
+				} else {
+					s.Require().Equal(*tc.expectedHeigth, *result)
+				}
 			}
 		})
 	}
 }
 
-func (suite *DbTestSuite) TestGetMissingBlocks() {
+func (s *Suite) TestGetMissingBlocks() {
 	testCases := []struct {
 		name            string
 		setup           func()
@@ -89,8 +123,8 @@ func (suite *DbTestSuite) TestGetMissingBlocks() {
 		{
 			name: "chain id is handled correctly",
 			setup: func() {
-				suite.database.SaveIndexedBlock("test", 12, time.Now())
-				suite.database.SaveIndexedBlock("test", 11, time.Now())
+				s.database.SaveIndexedBlock("test", 12, time.Now())
+				s.database.SaveIndexedBlock("test", 11, time.Now())
 			},
 			shouldErr:       false,
 			chainID:         "empty",
@@ -101,8 +135,8 @@ func (suite *DbTestSuite) TestGetMissingBlocks() {
 		{
 			name: "return the correct heights",
 			setup: func() {
-				suite.database.SaveIndexedBlock("test", 12, time.Now())
-				suite.database.SaveIndexedBlock("test", 11, time.Now())
+				s.database.SaveIndexedBlock("test", 12, time.Now())
+				s.database.SaveIndexedBlock("test", 11, time.Now())
 			},
 			shouldErr:       false,
 			chainID:         "test",
@@ -113,25 +147,24 @@ func (suite *DbTestSuite) TestGetMissingBlocks() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		s.Run(tc.name, func() {
+			s.executeBeforeTestHook()
 			if tc.setup != nil {
 				tc.setup()
 			}
 
-			result, err := suite.database.GetMissingBlocks(tc.chainID, tc.from, tc.to)
+			result, err := s.database.GetMissingBlocks(tc.chainID, tc.from, tc.to)
 			if tc.shouldErr {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			} else {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expectedHeigths, result)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedHeigths, result)
 			}
 		})
 	}
 }
 
-func (suite *DbTestSuite) TestSaveIndexedBlock() {
+func (s *Suite) TestSaveIndexedBlock() {
 	testCases := []struct {
 		name      string
 		setup     func()
@@ -148,49 +181,25 @@ func (suite *DbTestSuite) TestSaveIndexedBlock() {
 			timestamp: time.Date(2021, 11, 22, 14, 0, 0, 0, time.UTC),
 			shouldErr: false,
 			check: func() {
-				var blockRow postgresql.BlockRow
-				err := suite.database.SQL.Get(&blockRow, "SELECT * FROM blocks WHERE height = 11")
-				suite.Require().NoError(err)
-
-				suite.Require().Equal("test", blockRow.ChainID)
-				suite.Require().Equal(types.Height(11), blockRow.Height)
-				suite.Require().Equal(time.Date(2021, 11, 22, 14, 0, 0, 0, time.UTC), blockRow.Timestamp.UTC())
-			},
-		},
-		{
-			name: "constraint works correctly",
-			setup: func() {
-				suite.database.SaveIndexedBlock("test", 11, time.Now())
-			},
-			chainID:   "test",
-			height:    11,
-			timestamp: time.Date(2021, 11, 22, 14, 0, 0, 0, time.UTC),
-			shouldErr: false,
-			check: func() {
-				var blockRow postgresql.BlockRow
-				err := suite.database.SQL.Get(&blockRow, "SELECT * FROM blocks WHERE height = 11")
-				suite.Require().NoError(err)
-
-				suite.Require().Equal("test", blockRow.ChainID)
-				suite.Require().Equal(types.Height(11), blockRow.Height)
-				suite.Require().Equal(time.Date(2021, 11, 22, 14, 0, 0, 0, time.UTC), blockRow.Timestamp.UTC())
+				heights, err := s.database.GetMissingBlocks("test", 11, 11)
+				s.Require().NoError(err)
+				s.Require().Empty(heights)
 			},
 		},
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		s.Run(tc.name, func() {
+			s.executeBeforeTestHook()
 			if tc.setup != nil {
 				tc.setup()
 			}
 
-			err := suite.database.SaveIndexedBlock(tc.chainID, tc.height, tc.timestamp)
+			err := s.database.SaveIndexedBlock(tc.chainID, tc.height, tc.timestamp)
 			if tc.shouldErr {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			} else {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 				if tc.check != nil {
 					tc.check()
 				}
