@@ -80,7 +80,7 @@ func (n *Node) GetBlock(ctx context.Context, height types.Height) (types.Block, 
 
 		// Create the transaction instance
 		txs[i] = TxFromReceipt(r).
-			WithLogs(logs)
+			WithLogs(txLogs)
 	}
 
 	// Create the block
