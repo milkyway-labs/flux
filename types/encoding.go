@@ -20,6 +20,11 @@ func (bz Base64Bytes) MarshalJSON() ([]byte, error) {
 }
 
 func (bz *Base64Bytes) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		*bz = make(Base64Bytes, 0)
+		return nil
+	}
+
 	if len(data) < 2 || data[0] != '"' || data[len(data)-1] != '"' {
 		return fmt.Errorf("invalid base64 string: %s", data)
 	}
