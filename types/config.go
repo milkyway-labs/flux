@@ -182,6 +182,9 @@ type IndexerConfig struct {
 	// StartHeight height from which the indexer will start fetching blocks.
 	// If undefined the indexer will start indexing from the current node height.
 	StartHeight *Height `yaml:"start_height"`
+	// ForceReparseOldBlocks if start_height is defined, this flag will force the indexer to reparse the blocks
+	// from the start height to the current node height.
+	ForceReparseOldBlocks bool `yaml:"force_reparse_old_blocks"`
 	// MaxAttempts represents the number of time the indexer will re-try to index
 	// a block in case of failure.
 	MaxAttempts uint32 `yaml:"max_attempts"`
