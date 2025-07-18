@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 -->
 
+## Version 1.3.0
+
+### Features
+- Add a new `force_reparse_old_blocks` option to the indexer config 
+to force the indexer to reparse the blocks from the start height to the current node height
+
+### Bug Fixes
+- Fix error when unmarshalling the `Base64Bytes` type
+- Fix missing initialization of the `globalObjects` field inside `IndexersBuilder`
+
 
 ## Version 1.2.1
 
