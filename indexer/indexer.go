@@ -97,6 +97,19 @@ func (i *Indexer) WithCustomHeightProducer(producer HeightProducer) *Indexer {
 	return i
 }
 
+// GetModule returns the module with the given name.
+// If the module is not found, an error is returned.
+func (i *Indexer) GetModule(moduleName string) (modules.Module, error) {
+	for _, module := range i.modules {
+		if module.GetName() == moduleName {
+			return module, nil
+		}
+	}
+
+	err := fmt.Errorf("module %s not found", moduleName)
+	return nil, err
+}
+
 // buildDefaultHeightProducer builds the default height producer, this producer
 // will produce the height of the un-indexed blocks from first indexed block or the configured start height
 // in case is the first start to the current node height and starts monitor the node for new blocks.
