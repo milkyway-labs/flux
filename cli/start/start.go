@@ -56,6 +56,11 @@ func startParsing(ctx context.Context, cliCtx *types.CliContext) error {
 
 	waitGroup := sync.WaitGroup{}
 	for _, indexer := range indexers {
+		// Don't start the indexer if it is disabled
+		if indexer.IsDisabled() {
+			continue
+		}
+
 		err := indexer.Start(ctx, &waitGroup)
 		if err != nil {
 			return fmt.Errorf("start indexer %s: %w", indexer.GetName(), err)

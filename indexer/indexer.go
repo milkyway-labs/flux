@@ -64,6 +64,11 @@ func (i *Indexer) GetName() string {
 	return i.cfg.Name
 }
 
+// IsDisabled returns true if the indexer is disabled.
+func (i *Indexer) IsDisabled() bool {
+	return i.cfg.Disabled
+}
+
 // Start starts the indexer.
 func (i *Indexer) Start(ctx context.Context, wg *sync.WaitGroup) error {
 	heightProducer := i.heightProducer

@@ -175,4 +175,5 @@ The following fields are **required**, while the rest are **optional** and will 
 This can be used to override the default configurations defined in the `modules` section.
 * `start_height`: Height from which the indexer will start fetching blocks. If undefined the indexer will start indexing from the current node height.
 * `force_reparse_old_blocks`: If `start_height` is defined, this flag will force the indexer to reparse the blocks from the start height to the current node height.
+* `disabled`: If `true`, the indexer will not be started.
 

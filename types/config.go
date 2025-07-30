@@ -191,6 +191,8 @@ type IndexerConfig struct {
 	// Define the amount of time the indexer will wait before re-enqueuing a failed
 	// block for parsing.
 	TimeBeforeRetry time.Duration `yaml:"time_before_retry"`
+	// Disabled if true, the indexer will not be started.
+	Disabled bool `yaml:"disabled"`
 }
 
 var DefaultIndexerCfg = IndexerConfig{
