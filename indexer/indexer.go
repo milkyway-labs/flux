@@ -137,8 +137,8 @@ func (i *Indexer) buildDefaultHeightProducer(ctx context.Context) (HeightProduce
 		} else {
 			// We don't have any indexed block or the current node height is lower
 			// than the lowest indexed block, which is wired. In those cases
-			// start looking for un-indexed block from the current node height.
-			missingBlockStartHeight = currentNodeHeight
+			// start looking for un-indexed block from the current node height - 1.
+			missingBlockStartHeight = currentNodeHeight - 1
 		}
 	}
 
