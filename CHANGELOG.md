@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 -->
 
+
+## Version 1.4.0
+
+### Features
+- Add a new `disabled` option to the indexer config to disable the indexer
+- Add a new `IndexerStartHook` interface to allow modules to execute custom logic when the indexer starts
+- Add a new `GetModule` method to the `Indexer` to get a module by name
+
+### Bug Fixes
+- `Indexer` now correctly handles the case where the `start_height` is not defined and the indexer has never indexed any block
+
 ## Version 1.3.0
 
 ### Features
@@ -12,7 +23,6 @@ to force the indexer to reparse the blocks from the start height to the current 
 ### Bug Fixes
 - Fix error when unmarshalling the `Base64Bytes` type
 - Fix missing initialization of the `globalObjects` field inside `IndexersBuilder`
-
 
 ## Version 1.2.1
 
