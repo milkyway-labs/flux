@@ -87,6 +87,16 @@ func (i *Indexer) Start(ctx context.Context, wg *sync.WaitGroup) error {
 		worker.Start(ctx, wg)
 	}
 
+	// Call the module's start hook
+	for _, module := range i.modules {
+		if moduleStartHook, ok := module.(modules.IndexerStartHook); ok {
+			err := moduleStartHook.OnIndexerStart(ctx)
+			if err != nil {
+				return fmt.Errorf("start module %s: %w", module.GetName(), err)
+			}
+		}
+	}
+
 	return nil
 }
 
