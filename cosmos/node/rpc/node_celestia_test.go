@@ -11,13 +11,13 @@ import (
 )
 
 func (suite *NodeTestSuite) TestCelestiaGetBlockResults() {
-	height := types.MaxHeight
+	celestiaUpgradeHeight := types.Height(6748822)
 
 	suite.SetupSuite(rpc.NewConfig(
 		"https://celestia-rpc.publicnode.com",
 		time.Second*10,
-		&height,
-		&height,
+		&celestiaUpgradeHeight,
+		&celestiaUpgradeHeight,
 	))
 
 	height, err := suite.node.GetCurrentHeight(context.Background())
