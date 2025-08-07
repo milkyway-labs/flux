@@ -105,7 +105,7 @@ func (w *Worker) fetchAndProcessBlock(ctx context.Context, height types.Height) 
 	}
 
 	// Save in the database that we have successfully indexed the block
-	err = w.db.SaveIndexedBlock(w.node.GetChainID(), height, block.GetTimeStamp())
+	err = w.db.SaveIndexedBlock(w.cfg.Name, w.node.GetChainID(), height, block.GetTimeStamp())
 	if err != nil {
 		return fmt.Errorf("save block %d as indexed: %w", height, err)
 	}

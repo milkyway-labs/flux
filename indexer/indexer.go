@@ -140,7 +140,7 @@ func (i *Indexer) buildDefaultHeightProducer(ctx context.Context) (HeightProduce
 		missingBlockStartHeight = *i.cfg.StartHeight
 	} else {
 		// Get the lowest indexed block.
-		lowestAvailableBlock, err := i.db.GetLowestBlock(i.node.GetChainID())
+		lowestAvailableBlock, err := i.db.GetLowestBlock(i.GetName(), i.node.GetChainID())
 		if err != nil {
 			return nil, fmt.Errorf("get lowest block %w", err)
 		}
@@ -164,7 +164,7 @@ func (i *Indexer) buildDefaultHeightProducer(ctx context.Context) (HeightProduce
 		}
 	} else {
 		// Get the blocks that are missing and we need to index
-		missingBlocksFromDB, err := i.db.GetMissingBlocks(i.node.GetChainID(), missingBlockStartHeight, currentNodeHeight-1)
+		missingBlocksFromDB, err := i.db.GetMissingBlocks(i.GetName(), i.node.GetChainID(), missingBlockStartHeight, currentNodeHeight-1)
 		if err != nil {
 			return nil, fmt.Errorf("get missing blocks: %w", err)
 		}

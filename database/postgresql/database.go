@@ -26,6 +26,7 @@ type Database struct {
 }
 
 type BlockRow struct {
+	Indexer   string       `db:"indexer"`
 	ChainID   string       `db:"chain_id"`
 	Height    types.Height `db:"height"`
 	Timestamp time.Time    `db:"timestamp"`
@@ -45,11 +46,16 @@ func NewDatabase(logger zerolog.Logger, cfg *Config) (*Database, error) {
 }
 
 // GetLowestBlock implements database.Database.
-func (db *Database) GetLowestBlock(chainID string) (*types.Height, error) {
-	stmt := `SELECT height FROM blocks WHERE chain_id = $1 ORDER BY height ASC LIMIT 1`
+func (db *Database) GetLowestBlock(indexer string, chainID string) (*types.Height, error) {
+	stmt := `
+	SELECT height
+	FROM blocks
+	WHERE indexer = $1 AND chain_id = $2
+	ORDER BY height ASC LIMIT 1
+`
 
 	var height types.Height
-	err := db.SQL.QueryRow(stmt, chainID).Scan(&height)
+	err := db.SQL.QueryRow(stmt, indexer, chainID).Scan(&height)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -61,15 +67,20 @@ func (db *Database) GetLowestBlock(chainID string) (*types.Height, error) {
 }
 
 // GetMissingBlocks implements database.Database.
-func (db *Database) GetMissingBlocks(chainID string, from types.Height, to types.Height) ([]types.Height, error) {
+func (db *Database) GetMissingBlocks(indexer string, chainID string, from types.Height, to types.Height) ([]types.Height, error) {
 	if from > to {
 		return nil, fmt.Errorf("invalid range, from(%d) must not be greater than to(%d)", from, to)
 	}
 
 	var result []types.Height
-	stmt := `SELECT generate_series($1::int,$2::int) EXCEPT SELECT height FROM blocks WHERE chain_id = $3 ORDER BY 1`
+	stmt := `
+	SELECT generate_series($1::int,$2::int) EXCEPT SELECT height
+	FROM blocks
+	WHERE indexer = $3 AND chain_id = $4
+	ORDER BY 1
+`
 
-	err := db.SQL.Select(&result, stmt, from, to, chainID)
+	err := db.SQL.Select(&result, stmt, from, to, indexer, chainID)
 	if err != nil {
 		return nil, err
 	}
@@ -78,15 +89,16 @@ func (db *Database) GetMissingBlocks(chainID string, from types.Height, to types
 }
 
 // SaveIndexedBlock implements database.Database.
-func (db *Database) SaveIndexedBlock(chainID string, height types.Height, timestamp time.Time) error {
+func (db *Database) SaveIndexedBlock(indexer string, chainID string, height types.Height, timestamp time.Time) error {
 	stmt := `
-INSERT INTO blocks (chain_id, height, timestamp)
-VALUES ($1, $2, $3)
+INSERT INTO blocks (indexer, chain_id, height, timestamp)
+VALUES ($1, $2, $3, $4)
 ON CONFLICT ON CONSTRAINT unique_chain_block DO UPDATE
 	SET timestamp = excluded.timestamp
-		`
+`
 
 	_, err := db.SQL.Exec(stmt,
+		indexer,
 		chainID,
 		height,
 		timestamp.UTC(),
