@@ -3,6 +3,7 @@ package indexer
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	log "github.com/rs/zerolog"
@@ -81,7 +82,10 @@ func (w *Worker) workerLoop(ctx context.Context, wg *sync.WaitGroup) {
 			// Get the block from the node
 			err := w.fetchAndProcessBlock(ctx, indexHeight.Height)
 			if err != nil {
-				w.log.Err(err).Uint64("height", uint64(indexHeight.Height)).Msg("get and process block")
+				// Ignorable error
+				if !strings.Contains(err.Error(), "could not find results for height") {
+					w.log.Err(err).Uint64("height", uint64(indexHeight.Height)).Msg("get and process block")
+				}
 				w.reEnqueueBlock(ctx, indexHeight)
 			}
 		}
@@ -154,7 +158,7 @@ func (w *Worker) reEnqueueBlock(ctx context.Context, indexHeight IndexerHeight) 
 			return
 		}
 
-		w.log.Info().Uint64("height", uint64(indexHeight.Height)).Msg("re-enqueue block")
+		w.log.Debug().Uint64("height", uint64(indexHeight.Height)).Msg("re-enqueue block")
 		w.heightsQueue.DelayedEnqueue(ctx, w.cfg.TimeBeforeRetry, indexHeight)
 	}
 }
