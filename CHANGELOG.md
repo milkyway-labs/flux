@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 -->
 
+## Version 1.4.1
+
+### Bug Fixes
+
+- Do not print log messages for block results not found errors
+- Do not print log messages for block re-enqueueing
 
 ## Version 1.4.0
 
