@@ -64,7 +64,7 @@ func (w *Worker) workerLoop(ctx context.Context, wg *sync.WaitGroup) {
 		prometheus.WorkersCount.WithLabelValues(w.cfg.Name).Dec()
 		w.log.Info().Msg("stopping indexing loop")
 	}()
-	w.log.Info().Msg("started worker")
+	w.log.Debug().Msg("started worker")
 	prometheus.WorkersCount.WithLabelValues(w.cfg.Name).Inc()
 
 	for {
