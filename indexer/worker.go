@@ -62,7 +62,7 @@ func (w *Worker) workerLoop(ctx context.Context, wg *sync.WaitGroup) {
 	defer func() {
 		wg.Done()
 		prometheus.WorkersCount.WithLabelValues(w.cfg.Name).Dec()
-		w.log.Info().Msg("stopping indexing loop")
+		w.log.Debug().Msg("stopping indexing loop")
 	}()
 	w.log.Debug().Msg("started worker")
 	prometheus.WorkersCount.WithLabelValues(w.cfg.Name).Inc()
@@ -75,7 +75,7 @@ func (w *Worker) workerLoop(ctx context.Context, wg *sync.WaitGroup) {
 		default:
 			indexHeight, ok := w.heightsQueue.ContextDequeue(ctx)
 			if !ok {
-				w.log.Warn().Msg("height queue closed, stopping worker")
+				w.log.Debug().Msg("height queue closed, stopping worker")
 				return
 			}
 
