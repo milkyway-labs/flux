@@ -3,11 +3,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 -->
 
+## Version 1.4.3
+
+### Bug Fixes
+
+- Decrease log level to DEBUG for 'stopping' messages
+
 ## Version 1.4.2
 
 ### Bug Fixes
 
- Do not print log messages when starting workers
+- Do not print log messages when starting workers
 
 ## Version 1.4.1
 
